@@ -1,6 +1,13 @@
-@(vv: model.ViewValueCommon)
-@common.Default(vv){
+@import lib.model.Todo
+
+@(vv: Seq[Todo])
+<!-- common.Default(model.ViewValueCommon){
    <ul>
-    <li><a>task1</a></li>
+    <li><a>vv</a></li>
  </ul>
-}
+} -->
+<ul>
+   @for(todo <- vv){
+      <li>@todo</li>
+   }
+</ul>
