@@ -5,6 +5,7 @@ import play.api.mvc._
 
 import model.ViewValueTodo
 import lib.persistence.default.TodoRepository
+import lib.persistence.default.TodoCategoryRepository
 import lib.model.Todo
 
 import scala.concurrent.ExecutionContext
@@ -24,7 +25,8 @@ class TodoController @Inject()(val controllerComponents: ControllerComponents)(i
 
   def index() = Action async { implicit req =>
     for {
-      todoSeq <- TodoRepository.getall()
+      todoSeq         <- TodoRepository.getall()
+      todoCategorySeq <- TodoCategoryRepository.getall()
     } yield {
       // val vv = ViewValueTodo(
       //   title  = "タスク一覧",

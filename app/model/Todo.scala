@@ -9,3 +9,10 @@ case class ViewValueTodo(
     jsSrc:  Seq[String],
     data:   Option[Todo]
 ) extends ViewValueCommon
+
+// case class ViewValueTodoCategory(
+//     title:  String,
+//     cssSrc: Seq[String],
+//     jsSrc:  Seq[String],
+//     data:   Option[Todo]
+// )
