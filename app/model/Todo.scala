@@ -7,7 +7,7 @@ case class ViewValueTodo(
     title:  String,
     cssSrc: Seq[String],
     jsSrc:  Seq[String],
-    data:   Option[Todo]
+    data:   Seq[Todo]
 ) extends ViewValueCommon
 
 // case class ViewValueTodoCategory(
