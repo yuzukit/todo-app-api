@@ -25,15 +25,20 @@ class TodoController @Inject()(val controllerComponents: ControllerComponents)(i
 
   def index() = Action async { implicit req =>
     for {
-      todoSeq         <- TodoRepository.getall()
-      // newtodo <- todoSeq.map(todo => todo.title)
-      todoCategorySeq <- TodoCategoryRepository.getall()
+      todoSeq     <- TodoRepository.getall()
+      categorySeq <- TodoCategoryRepository.getall()
     } yield {
+      val res = todoSeq.map(todo => (
+          todo.title, 
+          todo.body, 
+          todo.state, 
+          categorySeq.filter(_.id.get == todo.category_id).head.name))
+          
       Ok(views.html.todo.list(ViewValueTodo(
         title  = "タスク一覧",
         cssSrc = Seq("main.css"),
         jsSrc  = Seq("main.js"),
-        data   = todoSeq,
+        data   = res
       )))
     }
   }
