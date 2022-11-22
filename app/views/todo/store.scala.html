@@ -7,11 +7,15 @@
   @helper.form(action = controllers.todo.routes.TodoController.store()) {
     @* CSRFトークンの生成ヘルパーを呼び出している。これでいい感じにトークンが用意されます。 *@
     @helper.CSRF.formField
-    @helper.textarea(form("category_name"),
+    <!-- helper.textarea(form("category_name"),
       'rows -> 7, 'cols -> 40,
       '_label -> "カテゴリー" ,'_showConstraints -> false
+    ) -->
+    @helper.inputRadioGroup(form("category_name"),
+      options = Seq("フロントエンド" -> "フロントエンド", "バックエンド" -> "バックエンド", "インフラ" -> "インフラ"),
+      '_label -> "カテゴリー"
     )
-    @helper.textarea(form("title"),
+    @helper.inputText(form("title"),
       'rows -> 1, 'cols -> 40,
       '_label -> "タイトル" ,'_showConstraints -> false
     )
@@ -20,5 +24,7 @@
       '_label -> "内容" ,'_showConstraints -> false
     )
     <input type="submit" value="登録">
+    <p><a href="/">Homeに戻る</a></p>
+    <p><a href="/todo/list">タスク一覧に戻る</a></p>
   }
 }
