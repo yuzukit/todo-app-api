@@ -1,0 +1,24 @@
+@import controllers.todo.TodoFormData
+@* CSRFトークンの生成ヘルパーで、requestHeaderを必要としているのでこちらも暗黙パラメートして渡しています。 *@
+@(form: Form[TodoFormData])(implicit messagesProvider: MessagesProvider, requestHeader: RequestHeader)
+
+@main("登録画面") {
+  <h1>登録画面です</h1>
+  @helper.form(action = controllers.todo.routes.TodoController.store()) {
+    @* CSRFトークンの生成ヘルパーを呼び出している。これでいい感じにトークンが用意されます。 *@
+    @helper.CSRF.formField
+    @helper.textarea(form("category_name"),
+      'rows -> 7, 'cols -> 40,
+      '_label -> "カテゴリー" ,'_showConstraints -> false
+    )
+    @helper.textarea(form("title"),
+      'rows -> 1, 'cols -> 40,
+      '_label -> "タイトル" ,'_showConstraints -> false
+    )
+    @helper.textarea(form("body"),
+      'rows -> 7, 'cols -> 40,
+      '_label -> "内容" ,'_showConstraints -> false
+    )
+    <input type="submit" value="登録">
+  }
+}

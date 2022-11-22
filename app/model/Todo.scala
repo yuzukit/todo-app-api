@@ -10,9 +10,3 @@ case class ViewValueTodo(
     data:   Seq[(String, String, Int, String)]
 ) extends ViewValueCommon
 
-// case class ViewValueTodoCategory(
-//     title:  String,
-//     cssSrc: Seq[String],
-//     jsSrc:  Seq[String],
-//     data:   Option[Todo]
-// )
