@@ -4,7 +4,7 @@
 @common.Default(vv){
    <ul>
       @for(todo <- vv.data){
-         <li>@todo</li>
+         <li>@todo._2, @todo._3, @todo._4, @todo._5</li>
          <li>
             <a href="@controllers.todo.routes.TodoController.edit(todo._1)">
               <button type="button">編集</button>
