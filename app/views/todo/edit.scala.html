@@ -20,6 +20,10 @@
       'rows -> 7, 'cols -> 40,
       '_label -> "内容" ,'_showConstraints -> false
     )
+    @helper.inputRadioGroup(form("state"),
+      options = Seq("0" -> "TODO(着手前)", "1" -> "進行中", "2" -> "完了"),
+      '_label -> "ステータス"
+    )
     <input type="submit" value="更新">
     <p><a href="/">Homeに戻る</a></p>
     <p><a href="/todo/list">タスク一覧に戻る</a></p>
