@@ -1,10 +1,21 @@
 @import lib.model.Todo
 
-@(vv: model.ViewValueTodo)
+@(vv: model.ViewValueTodo)(implicit messagesProvider: MessagesProvider, requestHeader: RequestHeader)
 @common.Default(vv){
    <ul>
       @for(todo <- vv.data){
          <li>@todo</li>
+         <li>
+            <a href="@controllers.todo.routes.TodoController.edit(todo._1)">
+              <button type="button">編集</button>
+            </a>
+            @helper.form(action = controllers.todo.routes.TodoController.delete()) {
+               @helper.CSRF.formField
+               <input type="hidden" value="@todo._1" name="id">
+               <input type="submit" value="削除">
+               <i class="far fa-trash-alt delete"></i>
+             }
+          </li>
       }
  </ul>
  <h3><a href="/todo/store">タスクを登録</a></h3>

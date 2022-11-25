@@ -71,4 +71,16 @@ case class TodoCategoryRepository[P <: JdbcProfile]()(implicit val driver: P)
     RunDBAction(TodoCategoryTable, "slave") { 
       _.result
   }
+
+  // def getCategoryId(name: String): Future[Id] =
+  //   RunDBAction(TodoCategoryTable, "slave") { _
+  //     .filter(_.name === name)
+  //     .result.head.id
+  // }
+
+  // def getCategoryName(id: Id): Future[String] =
+  //   RunDBAction(TodoCategoryTable, "slave") { _
+  //     .filter(_.id === id)
+  //     .result.head.name
+  //   }
 }

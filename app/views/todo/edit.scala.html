@@ -1,10 +1,11 @@
 @import controllers.todo.TodoFormData
-@* CSRFトークンの生成ヘルパーで、requestHeaderを必要としているのでこちらも暗黙パラメートして渡しています。 *@
-@(form: Form[TodoFormData])(implicit messagesProvider: MessagesProvider, requestHeader: RequestHeader)
+@import lib.persistence.default.TodoRepository
+@* idを引数に追加 *@
+@(id: TodoRepository.Id, form: Form[TodoFormData])(implicit messagesProvider: MessagesProvider, requestHeader: RequestHeader)
 
-@main("登録画面") {
-  <h1>登録画面です</h1>
-  @helper.form(action = controllers.todo.routes.TodoController.store()) {
+@main("編集画面") {
+  <h1>編集画面です</h1>
+  @helper.form(action = controllers.todo.routes.TodoController.update(id)) {
     @* CSRFトークンの生成ヘルパーを呼び出している。これでいい感じにトークンが用意されます。 *@
     @helper.CSRF.formField
     @helper.inputRadioGroup(form("category_name"),
@@ -19,7 +20,7 @@
       'rows -> 7, 'cols -> 40,
       '_label -> "内容" ,'_showConstraints -> false
     )
-    <input type="submit" value="登録">
+    <input type="submit" value="更新">
     <p><a href="/">Homeに戻る</a></p>
     <p><a href="/todo/list">タスク一覧に戻る</a></p>
   }

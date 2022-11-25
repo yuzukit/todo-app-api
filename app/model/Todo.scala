@@ -7,6 +7,6 @@ case class ViewValueTodo(
     title:  String,
     cssSrc: Seq[String],
     jsSrc:  Seq[String],
-    data:   Seq[(String, String, Int, String)]
+    data:   Seq[(Todo.Id, String, String, Int, String)]
 ) extends ViewValueCommon
 
