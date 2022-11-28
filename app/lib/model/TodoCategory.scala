@@ -48,12 +48,4 @@ object TodoCategory {
       )
     )
   }
-
-  // def build(name: String): Todo#WithNoId =
-  //   new Todo(
-  //     id = None,
-  //     name = name,
-  //     slug  = slug,
-  //     color = color,
-  //   ).toWithNoId
 }
