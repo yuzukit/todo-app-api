@@ -21,7 +21,7 @@
       '_label -> "内容" ,'_showConstraints -> false
     )
     @helper.inputRadioGroup(form("state"),
-      options = Seq("0" -> "TODO(着手前)", "1" -> "進行中", "2" -> "完了"),
+      options = Seq("IS_UNTOUCHED" -> "TODO(着手前)", "IS_ONGOING" -> "進行中", "IS_FINISHED" -> "完了"),
       '_label -> "ステータス"
     )
     <input type="submit" value="更新">

@@ -4,6 +4,7 @@ import javax.inject._
 import play.api.mvc._
 import play.api.data.Form
 import play.api.data.Forms._
+import play.api.data.format.Formats._ 
 
 import model.ViewValueTodo
 import lib.persistence.default.TodoRepository
@@ -13,9 +14,10 @@ import lib.model.{Todo, TodoCategory}
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import play.api.i18n.I18nSupport
+
 //import scala.concurrent.ExecutionContext.Implicits.global
 
-case class TodoFormData(category_name: String, title: String, body: String, state: Int)
+case class TodoFormData(category_name: String, title: String, body: String, state: Todo.Status)
 
 @Singleton
 class TodoController @Inject()(
@@ -23,14 +25,14 @@ class TodoController @Inject()(
   )(implicit val ec: ExecutionContext) extends BaseController 
   with I18nSupport {
 
-  // Tweet登録用のFormオブジェクト
+  // Todo登録用のFormオブジェクト
   val form = Form(
     // html formのnameがcontentのものを140文字以下の必須文字列に設定する
     mapping(
       "category_name" -> nonEmptyText,
       "title"         -> nonEmptyText(maxLength = 140),
       "body"          -> nonEmptyText(maxLength = 140),
-      "state"         -> default(number, 0)
+      "state"         -> default     (of[Todo.Status], Todo.Status.IS_UNTOUCHED)
     )(TodoFormData.apply)(TodoFormData.unapply)
   )
 
@@ -85,7 +87,7 @@ class TodoController @Inject()(
               categorySeq.filter(_.name == todoFormData.category_name).head.id.get,
               todoFormData.title, 
               todoFormData.body, 
-              0))
+              ))
          } yield {
            Redirect(routes.TodoController.index())
          }
@@ -105,7 +107,7 @@ class TodoController @Inject()(
       todoOpt match {
           case Some(todo: Todo) =>
             Ok(views.html.todo.edit(
-              // データを識別するためのidを渡す
+            // データを識別するためのidを渡す
             Todo.Id(id),
             // fillでformに値を詰める
             form.fill(TodoFormData(
@@ -138,7 +140,7 @@ class TodoController @Inject()(
               category_id = categorySeq.filter(_.name == data.category_name).head.id.get,
               title       = data.title,
               body        = data.body,
-              state       = data.state
+              state       = data.state,
             ))
           )
         } yield {
