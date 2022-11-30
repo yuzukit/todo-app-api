@@ -20,7 +20,7 @@ import ixias.util.EnumStatus
 
 //import scala.concurrent.ExecutionContext.Implicits.global
 
-case class TodoFormData(category_name: String, title: String, body: String, state: Int)//Todo.Status)
+case class TodoFormData(category_id: Int, title: String, body: String, state: Int)//Todo.Status)
 
 @Singleton
 class TodoController @Inject()(
@@ -31,7 +31,7 @@ class TodoController @Inject()(
   val form = Form(
     // html formのnameがcontentのものを140文字以下の必須文字列に設定する
     mapping(
-      "category_name" -> nonEmptyText,
+      "category_id"   -> number,//.verifying(min(1), max(3)),
       "title"         -> nonEmptyText(maxLength = 140),
       "body"          -> nonEmptyText(maxLength = 140),
       "state"         -> default(number, 0)
@@ -82,11 +82,10 @@ class TodoController @Inject()(
        // 処理が成功した場合に呼び出される関数
        (todoFormData: TodoFormData) => {
          for {
-            categorySeq <- TodoCategoryRepository.getall()
            // データを登録。returnのidは不要なので捨てる
             _ <- TodoRepository.add(Todo(
               //None, 
-              categorySeq.filter(_.name == todoFormData.category_name).head.id.get,
+              TodoCategory.Id(todoFormData.category_id),
               todoFormData.title, 
               todoFormData.body, 
               //todoFormData.state.toShort
@@ -116,7 +115,7 @@ class TodoController @Inject()(
             Todo.Id(id),
             // fillでformに値を詰める
             form.fill(TodoFormData(
-              categorySeq.filter(_.id.get == todo.category_id).head.name,
+              todo.category_id.toInt,
               todo.title,
               todo.body,
               todo.state.code.toInt
@@ -138,11 +137,10 @@ class TodoController @Inject()(
       },
       (data: TodoFormData) => {
         for {
-          categorySeq   <- TodoCategoryRepository.getall()
           oldTodoEntity <- TodoRepository.get(Todo.Id(id))
           count         <- TodoRepository.update(
             oldTodoEntity.get.map(_.copy(
-              category_id = categorySeq.filter(_.name == data.category_name).head.id.get,
+              category_id = TodoCategory.Id(data.category_id),//categorySeq.filter(_.name == data.category_name).head.id.get,
               title       = data.title,
               body        = data.body,
               state       = Todo.Status(code = data.state.toShort),

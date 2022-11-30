@@ -9,8 +9,8 @@
   @helper.form(action = controllers.todo.routes.TodoController.update(id)) {
     @* CSRFトークンの生成ヘルパーを呼び出している。これでいい感じにトークンが用意されます。 *@
     @helper.CSRF.formField
-    @helper.inputRadioGroup(form("category_name"),
-      options = Seq("フロントエンド" -> "フロントエンド", "バックエンド" -> "バックエンド", "インフラ" -> "インフラ"),
+    @helper.inputRadioGroup(form("category_id"),
+      options = Seq("1" -> "フロントエンド", "2" -> "バックエンド", "3" -> "インフラ"),
       '_label -> "カテゴリー"
     )
     @helper.inputText(form("title"),
