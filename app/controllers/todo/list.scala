@@ -31,7 +31,7 @@ class TodoController @Inject()(
   val form = Form(
     // html formのnameがcontentのものを140文字以下の必須文字列に設定する
     mapping(
-      "category_id"   -> number,//.verifying(min(1), max(3)),
+      "category_id"   -> number(min = 1, max = 3),
       "title"         -> nonEmptyText(maxLength = 140),
       "body"          -> nonEmptyText(maxLength = 140),
       "state"         -> default(number, 0)
@@ -83,17 +83,15 @@ class TodoController @Inject()(
        (todoFormData: TodoFormData) => {
          for {
            // データを登録。returnのidは不要なので捨てる
-            _ <- TodoRepository.add(Todo(
+            res <- TodoRepository.add(Todo(
               //None, 
               TodoCategory.Id(todoFormData.category_id),
               todoFormData.title, 
               todoFormData.body, 
-              //todoFormData.state.toShort
               Todo.Status(code = todoFormData.state.toShort),
-              //Todo.Status.IS_UNTOUCHED.code
               ))
          } yield {
-           Redirect(routes.TodoController.index())
+          Redirect(routes.TodoController.index())
          }
        }
     )
@@ -105,9 +103,8 @@ class TodoController @Inject()(
   def edit(id: Long) = Action async { implicit request: Request[AnyContent] =>
     for {
       todoSeq     <- TodoRepository.getall()
-      categorySeq <- TodoCategoryRepository.getall()
    } yield {
-      val todoOpt = todoSeq.filter(_.id.get == Todo.Id(id)).headOption
+      val todoOpt = todoSeq.find(_.id == Some(Todo.Id(id)))
       todoOpt match {
           case Some(todo: Todo) =>
             Ok(views.html.todo.edit(
@@ -140,17 +137,14 @@ class TodoController @Inject()(
           oldTodoEntity <- TodoRepository.get(Todo.Id(id))
           count         <- TodoRepository.update(
             oldTodoEntity.get.map(_.copy(
-              category_id = TodoCategory.Id(data.category_id),//categorySeq.filter(_.name == data.category_name).head.id.get,
+              category_id = TodoCategory.Id(data.category_id),
               title       = data.title,
               body        = data.body,
               state       = Todo.Status(code = data.state.toShort),
             ))
           )
         } yield {
-          count match {
-            //case 0 => NotFound(views.html.error.page404())
-            case _ => Redirect(routes.TodoController.index())
-          }
+          Redirect(routes.TodoController.index())
         }
       }
       )
@@ -161,15 +155,11 @@ class TodoController @Inject()(
    */
   def delete() = Action async { implicit request: Request[AnyContent] =>
     // requestから直接値を取得するサンプル
-    val idOpt = request.body.asFormUrlEncoded.get("id").headOption
+    val idOpt = request.body.asFormUrlEncoded.get("id").head
     for {
-      result <- TodoRepository.remove(Todo.Id(idOpt.get.toLong))
+      result <- TodoRepository.remove(Todo.Id(idOpt.toLong))
     } yield {
-      // 削除対象の有無によって処理を分岐
-      result match {
-        //case 0 => NotFound(views.html.error.page404())
-        case _ => Redirect(routes.TodoController.index())
-      }
+      Redirect(routes.TodoController.index())
     }
   }
 }
