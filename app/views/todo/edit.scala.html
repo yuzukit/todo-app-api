@@ -1,4 +1,5 @@
 @import controllers.todo.TodoFormData
+@import lib.model.Todo
 @import lib.persistence.default.TodoRepository
 @* idを引数に追加 *@
 @(id: TodoRepository.Id, form: Form[TodoFormData])(implicit messagesProvider: MessagesProvider, requestHeader: RequestHeader)
@@ -21,7 +22,7 @@
       '_label -> "内容" ,'_showConstraints -> false
     )
     @helper.inputRadioGroup(form("state"),
-      options = Seq("IS_UNTOUCHED" -> "TODO(着手前)", "IS_ONGOING" -> "進行中", "IS_FINISHED" -> "完了"),
+      options = Seq("0" -> "TODO(着手前)", "1" -> "進行中", "2" -> "完了"),
       '_label -> "ステータス"
     )
     <input type="submit" value="更新">

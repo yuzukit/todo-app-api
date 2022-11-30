@@ -2,9 +2,10 @@ package controllers.todo
 
 import javax.inject._
 import play.api.mvc._
-import play.api.data.Form
+import play.api.data.{Form, FormError}
 import play.api.data.Forms._
 import play.api.data.format.Formats._ 
+import play.api.data.format.{Formatter, Formats}
 
 import model.ViewValueTodo
 import lib.persistence.default.TodoRepository
@@ -15,16 +16,17 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import play.api.i18n.I18nSupport
 
+import ixias.util.EnumStatus
+
 //import scala.concurrent.ExecutionContext.Implicits.global
 
-case class TodoFormData(category_name: String, title: String, body: String, state: Todo.Status)
+case class TodoFormData(category_name: String, title: String, body: String, state: Int)//Todo.Status)
 
 @Singleton
 class TodoController @Inject()(
   val controllerComponents: ControllerComponents
   )(implicit val ec: ExecutionContext) extends BaseController 
   with I18nSupport {
-
   // Todo登録用のFormオブジェクト
   val form = Form(
     // html formのnameがcontentのものを140文字以下の必須文字列に設定する
@@ -32,7 +34,7 @@ class TodoController @Inject()(
       "category_name" -> nonEmptyText,
       "title"         -> nonEmptyText(maxLength = 140),
       "body"          -> nonEmptyText(maxLength = 140),
-      "state"         -> default     (of[Todo.Status], Todo.Status.IS_UNTOUCHED)
+      "state"         -> default(number, 0)
     )(TodoFormData.apply)(TodoFormData.unapply)
   )
 
@@ -87,6 +89,9 @@ class TodoController @Inject()(
               categorySeq.filter(_.name == todoFormData.category_name).head.id.get,
               todoFormData.title, 
               todoFormData.body, 
+              //todoFormData.state.toShort
+              Todo.Status(code = todoFormData.state.toShort),
+              //Todo.Status.IS_UNTOUCHED.code
               ))
          } yield {
            Redirect(routes.TodoController.index())
@@ -114,7 +119,7 @@ class TodoController @Inject()(
               categorySeq.filter(_.id.get == todo.category_id).head.name,
               todo.title,
               todo.body,
-              todo.state
+              todo.state.code.toInt
             ))
           ))
           case None        =>
@@ -140,7 +145,7 @@ class TodoController @Inject()(
               category_id = categorySeq.filter(_.name == data.category_name).head.id.get,
               title       = data.title,
               body        = data.body,
-              state       = data.state,
+              state       = Todo.Status(code = data.state.toShort),
             ))
           )
         } yield {
