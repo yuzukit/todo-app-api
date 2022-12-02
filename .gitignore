@@ -8,3 +8,5 @@ target
 .metals
 /RUNNING_PID
 docker/db/data/
+.vscode/
+.DS_STORE
