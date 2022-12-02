@@ -14,6 +14,6 @@ case class ViewValueList(
     title:  String,
     cssSrc: Seq[String],
     jsSrc:  Seq[String],
-    data:   Seq[ViewValueTodo]//(Todo.Id, String, String, Todo.Status, String)]
+    data:   Seq[ViewValueTodo]
 ) extends ViewValueCommon
 

@@ -1,0 +1,28 @@
+@import form.CategoryFormData
+@import lib.model.TodoCategory
+@import lib.persistence.default.TodoCategoryRepository
+@* idを引数に追加 *@
+@(id: TodoCategory.Id, form: Form[CategoryFormData])(implicit messagesProvider: MessagesProvider, requestHeader: RequestHeader)
+
+@main("編集画面") {
+  <h1>編集画面です</h1>
+  @helper.form(action = controllers.category.routes.TodoCategoryController.update(id)) {
+    @* CSRFトークンの生成ヘルパーを呼び出している。これでいい感じにトークンが用意されます。 *@
+    @helper.CSRF.formField
+    @helper.inputText(form("name"),
+      'rows -> 1, 'cols -> 40,
+      '_label -> "カテゴリー名",'_showConstraints -> false
+    )
+    @helper.inputText(form("slug"),
+      'rows -> 1, 'cols -> 40,
+      '_label -> "slug",'_showConstraints -> false
+    )
+    @helper.inputText(form("color"),
+      'rows -> 7, 'cols -> 40,
+      '_label -> "色",'_showConstraints -> false
+    )
+    <input type="submit" value="更新">
+    <p><a href="/">Homeに戻る</a></p>
+    <p><a href="/category/list">カテゴリー一覧に戻る</a></p>
+  }
+}
