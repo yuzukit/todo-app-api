@@ -40,16 +40,19 @@ class TodoController @Inject()(
   )
 
   def index() = Action async { implicit req =>
+    val todoFuture     = TodoRepository.getall()
+    val categoryFuture = TodoCategoryRepository.getall()
     for {
-      todoSeq     <- TodoRepository.getall()
-      categorySeq <- TodoCategoryRepository.getall()
+      todoSeq     <- todoFuture
+      categorySeq <- categoryFuture
     } yield {
       val res = todoSeq.map(todo => ViewValueTodo(
           id            = todo.id.get,
           title         = todo.title, 
           body          = todo.body, 
           state         = todo.state, 
-          category_name = categorySeq.filter(_.id.get == todo.category_id).head.name))
+          category_name = categorySeq.collectFirst{case category 
+            if category.id == Some(todo.category_id) => category.name}.getOrElse("not found")))
 
       Ok(views.html.todo.list(
         ViewValueList(
@@ -58,7 +61,6 @@ class TodoController @Inject()(
           jsSrc  = Seq("main.js"),
           data   = res
         ),
-
       ))
     }
   }
