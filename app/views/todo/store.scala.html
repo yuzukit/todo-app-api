@@ -1,4 +1,4 @@
-@import controllers.todo.TodoFormData
+@import form.TodoFormData
 @* CSRFトークンの生成ヘルパーで、requestHeaderを必要としているのでこちらも暗黙パラメートして渡しています。 *@
 @(form: Form[TodoFormData])(implicit messagesProvider: MessagesProvider, requestHeader: RequestHeader)
 

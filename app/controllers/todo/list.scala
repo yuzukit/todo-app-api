@@ -7,10 +7,11 @@ import play.api.data.Forms._
 import play.api.data.format.Formats._ 
 import play.api.data.format.{Formatter, Formats}
 
-import model.ViewValueTodo
+import model.{ViewValueTodo, ViewValueList}
 import lib.persistence.default.TodoRepository
 import lib.persistence.default.TodoCategoryRepository
 import lib.model.{Todo, TodoCategory}
+import form.TodoFormData
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
@@ -20,7 +21,7 @@ import ixias.util.EnumStatus
 
 //import scala.concurrent.ExecutionContext.Implicits.global
 
-case class TodoFormData(category_id: Int, title: String, body: String, state: Int)//Todo.Status)
+//case class TodoFormData(category_id: Int, title: String, body: String, state: Int)
 
 @Singleton
 class TodoController @Inject()(
@@ -31,10 +32,10 @@ class TodoController @Inject()(
   val form = Form(
     // html formのnameがcontentのものを140文字以下の必須文字列に設定する
     mapping(
-      "category_id"   -> number(min = 1, max = 3),
+      "category_id"   -> number      (min = 1, max = 3),
       "title"         -> nonEmptyText(maxLength = 140),
       "body"          -> nonEmptyText(maxLength = 140),
-      "state"         -> default(number, 0)
+      "state"         -> default     (number, Todo.Status.IS_UNTOUCHED.code.toInt)
     )(TodoFormData.apply)(TodoFormData.unapply)
   )
 
@@ -43,15 +44,15 @@ class TodoController @Inject()(
       todoSeq     <- TodoRepository.getall()
       categorySeq <- TodoCategoryRepository.getall()
     } yield {
-      val res = todoSeq.map(todo => (
-          todo.id.get,
-          todo.title, 
-          todo.body, 
-          todo.state, 
-          categorySeq.filter(_.id.get == todo.category_id).head.name))
+      val res = todoSeq.map(todo => ViewValueTodo(
+          id            = todo.id.get,
+          title         = todo.title, 
+          body          = todo.body, 
+          state         = todo.state, 
+          category_name = categorySeq.filter(_.id.get == todo.category_id).head.name))
 
       Ok(views.html.todo.list(
-        ViewValueTodo(
+        ViewValueList(
           title  = "タスク一覧",
           cssSrc = Seq("main.css"),
           jsSrc  = Seq("main.js"),

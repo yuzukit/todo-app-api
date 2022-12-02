@@ -1,17 +1,17 @@
 @import lib.model.Todo
 
-@(vv: model.ViewValueTodo)(implicit messagesProvider: MessagesProvider, requestHeader: RequestHeader)
+@(vv: model.ViewValueList)(implicit messagesProvider: MessagesProvider, requestHeader: RequestHeader)
 @common.Default(vv){
    <ul>
       @for(todo <- vv.data){
-         <li>@todo._2, @todo._3, @todo._4, @todo._5</li>
+         <li>@todo.title, @todo.body, @todo.state, @todo.category_name</li>
          <li>
-            <a href="@controllers.todo.routes.TodoController.edit(todo._1)">
+            <a href="@controllers.todo.routes.TodoController.edit(todo.id)">
               <button type="button">編集</button>
             </a>
             @helper.form(action = controllers.todo.routes.TodoController.delete()) {
                @helper.CSRF.formField
-               <input type="hidden" value="@todo._1" name="id">
+               <input type="hidden" value="@todo.id" name="id">
                <input type="submit" value="削除">
                <i class="far fa-trash-alt delete"></i>
              }

@@ -34,12 +34,15 @@ object Todo {
 
   // ステータス定義
   //~~~~~~~~~~~~~~~~~
-  sealed abstract class Status(val code: Short) extends EnumStatus
+  sealed abstract class Status(val code: Short, val name: String) extends EnumStatus
   object Status extends EnumStatus.Of[Status] {
     //type Status = values
-    case object IS_UNTOUCHED extends Status(code = 0) //未着手
-    case object IS_ONGOING   extends Status(code = 1) //進行中
-    case object IS_FINISHED  extends Status(code = 2) //完了
+    case object IS_UNTOUCHED extends Status(code = 0, name = "未着手") //未着手
+    case object IS_ONGOING   extends Status(code = 1, name = "進行中") //進行中
+    case object IS_FINISHED  extends Status(code = 2, name = "完了") //完了
+
+    //lazy val values: IndexedSeq[Status] = findValues
+    val statusSeq = Status.values.map(state => (state.code.toString, state.name))
   }
 
   // INSERT時のIDがAutoincrementのため,IDなしであることを示すオブジェクトに変換
