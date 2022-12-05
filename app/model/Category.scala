@@ -6,7 +6,7 @@ case class ViewValueCategory(
     id:    TodoCategory.Id,
     name:  String,
     slug:  String,
-    color: Int
+    color: TodoCategory.ColorStatus
 )
 
 case class ViewValueCategoryList(

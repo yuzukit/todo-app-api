@@ -82,7 +82,7 @@ class TodoCategoryController @Inject()(
             res <- TodoCategoryRepository.add(TodoCategory( 
               categoryFormData.name, 
               categoryFormData.slug, 
-              categoryFormData.color,
+              TodoCategory.ColorStatus(code = categoryFormData.color.toShort),
               ))
          } yield {
           Redirect(routes.TodoCategoryController.index())
@@ -108,7 +108,7 @@ class TodoCategoryController @Inject()(
             form.fill(CategoryFormData(
               category.name,
               category.slug,
-              category.color,
+              category.color.code.toInt,
             ))
           ))
           case None        =>
@@ -132,7 +132,7 @@ class TodoCategoryController @Inject()(
             oldEntity.get.map(_.copy(
               name  = data.name,
               slug  = data.slug,
-              color = data.color,
+              color = TodoCategory.ColorStatus(code = data.color.toShort)
             ))
           )
         } yield {

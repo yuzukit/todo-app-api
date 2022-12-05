@@ -1,4 +1,5 @@
 @import form.CategoryFormData
+@import lib.model.TodoCategory
 @* CSRFトークンの生成ヘルパーで、requestHeaderを必要としているのでこちらも暗黙パラメートして渡しています。 *@
 @(form: Form[CategoryFormData])(implicit messagesProvider: MessagesProvider, requestHeader: RequestHeader)
 
@@ -15,9 +16,9 @@
       'rows -> 1, 'cols -> 40,
       '_label -> "slug",'_showConstraints -> false
     )
-    @helper.inputText(form("color"),
-      'rows -> 7, 'cols -> 40,
-      '_label -> "色",'_showConstraints -> false
+    @helper.inputRadioGroup(form("color"),
+      options = TodoCategory.ColorStatus.statusSeq,
+      '_label -> "色"
     )
     <input type="submit" value="登録">
     <p><a href="/">Homeに戻る</a></p>

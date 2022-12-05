@@ -17,9 +17,9 @@
       'rows -> 1, 'cols -> 40,
       '_label -> "slug",'_showConstraints -> false
     )
-    @helper.inputText(form("color"),
-      'rows -> 7, 'cols -> 40,
-      '_label -> "色",'_showConstraints -> false
+    @helper.inputRadioGroup(form("color"),
+      options = TodoCategory.ColorStatus.statusSeq,
+      '_label -> "色"
     )
     <input type="submit" value="更新">
     <p><a href="/">Homeに戻る</a></p>
