@@ -52,7 +52,10 @@ class TodoController @Inject()(
           body          = todo.body, 
           state         = todo.state, 
           category_name = categorySeq.collectFirst{case category 
-            if category.id == Some(todo.category_id) => category.name}.getOrElse("not found")))
+            if category.id == Some(todo.category_id) => category.name}.getOrElse(null),
+          color         = categorySeq.collectFirst{case category 
+            if category.id == Some(todo.category_id) => category.color}.getOrElse(null)
+          ))
 
       Ok(views.html.todo.list(
         ViewValueList(

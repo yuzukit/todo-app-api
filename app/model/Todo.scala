@@ -8,12 +8,13 @@ case class ViewValueTodo(
     body:          String,
     state:         Todo.Status,
     category_name: String,
+    color:         TodoCategory.ColorStatus,
 )
 
 case class ViewValueList(
     title:  String,
     cssSrc: Seq[String],
     jsSrc:  Seq[String],
-    data:   Seq[ViewValueTodo]
+    data:   Seq[ViewValueTodo],
 ) extends ViewValueCommon
 
