@@ -2,7 +2,7 @@
 @import lib.model.Todo
 @import lib.persistence.default.TodoRepository
 @* idを引数に追加 *@
-@(id: TodoRepository.Id, form: Form[TodoFormData])(implicit messagesProvider: MessagesProvider, requestHeader: RequestHeader)
+@(id: TodoRepository.Id, form: Form[TodoFormData], category: Seq[(String, String)])(implicit messagesProvider: MessagesProvider, requestHeader: RequestHeader)
 
 @main("編集画面") {
   <h1>編集画面です</h1>
@@ -10,7 +10,7 @@
     @* CSRFトークンの生成ヘルパーを呼び出している。これでいい感じにトークンが用意されます。 *@
     @helper.CSRF.formField
     @helper.inputRadioGroup(form("category_id"),
-      options = Seq("1" -> "フロントエンド", "2" -> "バックエンド", "3" -> "インフラ"),
+      options = category,
       '_label -> "カテゴリー"
     )
     @helper.inputText(form("title"),

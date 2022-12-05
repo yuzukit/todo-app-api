@@ -71,4 +71,9 @@ case class TodoCategoryRepository[P <: JdbcProfile]()(implicit val driver: P)
     RunDBAction(TodoCategoryTable, "slave") { 
       _.result
   }
+
+  // def getRadioContents(): Future[Seq[(String, String)]] =
+  //   RunDBAction(TodoCategoryTable, "slave") {
+  //     _.map(data => (data.id.toString, data.name))
+  //   }
 }

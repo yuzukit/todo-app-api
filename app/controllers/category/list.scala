@@ -32,7 +32,7 @@ class TodoCategoryController @Inject()(
     // html formのnameがcontentのものを140文字以下の必須文字列に設定する
     mapping(
       "name"  -> nonEmptyText(maxLength = 140),
-      "slug"  -> text,//.verifying(Constraints.pattern("""[0-9a-zA-Z.+]+""".r, error = "Alphanumeric input is required.")),
+      "slug"  -> text.verifying(Constraints.pattern("""[0-9a-zA-Z.+]+""".r, error = "Alphanumeric input is required.")),
       "color" -> number
     )(CategoryFormData.apply)(CategoryFormData.unapply)
   )

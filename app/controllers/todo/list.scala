@@ -32,7 +32,7 @@ class TodoController @Inject()(
   val form = Form(
     // html formのnameがcontentのものを140文字以下の必須文字列に設定する
     mapping(
-      "category_id"   -> number      (min = 1, max = 3),
+      "category_id"   -> number,
       "title"         -> nonEmptyText(maxLength = 140),
       "body"          -> nonEmptyText(maxLength = 140),
       "state"         -> default     (number, Todo.Status.IS_UNTOUCHED.code.toInt)
@@ -68,8 +68,13 @@ class TodoController @Inject()(
   /**
     * 登録画面の表示用
     */
-  def register() = Action { implicit request: Request[AnyContent] =>
-    Ok(views.html.todo.store(form))
+  def register() = Action async { implicit request: Request[AnyContent] =>
+    for {
+      categorySeq <- TodoCategoryRepository.getall()
+    } yield {
+      val categoryRadioGroup = categorySeq.map(category => (category.id.get.toString, category.name))
+      Ok(views.html.todo.store(form, categoryRadioGroup))
+    }
   }
 
   /**
@@ -80,7 +85,13 @@ class TodoController @Inject()(
     form.bindFromRequest().fold(
        // 処理が失敗した場合に呼び出される関数
        (formWithErrors: Form[TodoFormData]) => {
-         Future.successful(BadRequest(views.html.todo.store(formWithErrors)))
+        for {
+          categorySeq <- TodoCategoryRepository.getall()
+        } yield {
+          val categoryRadioGroup = categorySeq.map(category => (category.id.get.toString, category.name))
+          //Future.successful(BadRequest(views.html.todo.store(formWithErrors, categoryRadioGroup)))
+          BadRequest(views.html.todo.store(formWithErrors, categoryRadioGroup))
+        }
        },
        // 処理が成功した場合に呼び出される関数
        (todoFormData: TodoFormData) => {
@@ -104,10 +115,14 @@ class TodoController @Inject()(
     * 編集画面を開く
     */
   def edit(id: Long) = Action async { implicit request: Request[AnyContent] =>
+    val todoFuture     = TodoRepository.getall()
+    val categoryFuture = TodoCategoryRepository.getall()
     for {
-      todoSeq     <- TodoRepository.getall()
+      todoSeq     <- todoFuture
+      categorySeq <- categoryFuture
    } yield {
       val todoOpt = todoSeq.find(_.id == Some(Todo.Id(id)))
+      val categoryRadioGroup = categorySeq.map(category => (category.id.get.toString, category.name))
       todoOpt match {
           case Some(todo: Todo) =>
             Ok(views.html.todo.edit(
@@ -119,7 +134,8 @@ class TodoController @Inject()(
               todo.title,
               todo.body,
               todo.state.code.toInt
-            ))
+            )),
+            categoryRadioGroup,
           ))
           case None        =>
             NotFound(views.html.error.page404())
@@ -133,7 +149,12 @@ class TodoController @Inject()(
   def update(id: Long) = Action async { implicit request: Request[AnyContent] =>
     form.bindFromRequest().fold(
       (formWithErrors: Form[TodoFormData]) => {
-        Future.successful(BadRequest(views.html.todo.edit(Todo.Id(id), formWithErrors)))
+        for {
+          categorySeq <- TodoCategoryRepository.getall()
+        } yield {
+          val categoryRadioGroup = categorySeq.map(category => (category.id.get.toString, category.name))
+          BadRequest(views.html.todo.edit(Todo.Id(id), formWithErrors, categoryRadioGroup))
+        }
       },
       (data: TodoFormData) => {
         for {
