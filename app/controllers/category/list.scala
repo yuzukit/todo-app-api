@@ -97,19 +97,19 @@ class TodoCategoryController @Inject()(
     */
   def edit(id: Long) = Action async { implicit request: Request[AnyContent] =>
     for {
-      categorySeq <- TodoCategoryRepository.getall()
+      category <- TodoCategoryRepository.get(TodoCategory.Id(id))
    } yield {
-      val categoryOpt = categorySeq.find(_.id == Some(TodoCategory.Id(id)))
-      categoryOpt match {
-          case Some(category: TodoCategory) =>
+      //val categoryOpt = categorySeq.find(_.id == Some(TodoCategory.Id(id)))
+      category match {
+          case Some(category) =>
             Ok(views.html.category.edit(
             // データを識別するためのidを渡す
             TodoCategory.Id(id),
             // fillでformに値を詰める
             form.fill(CategoryFormData(
-              category.name,
-              category.slug,
-              category.color.code.toInt,
+              category.v.name,
+              category.v.slug,
+              category.v.color.code.toInt,
             ))
           ))
           case None        =>

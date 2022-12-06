@@ -52,9 +52,9 @@ class TodoController @Inject()(
           body          = todo.body, 
           state         = todo.state, 
           category_name = categorySeq.collectFirst{case category 
-            if category.id == Some(todo.category_id) => category.name}.getOrElse(null),
+            if category.id == Some(todo.category_id) => category.name},
           color         = categorySeq.collectFirst{case category 
-            if category.id == Some(todo.category_id) => category.color}.getOrElse(null)
+            if category.id == Some(todo.category_id) => category.color}
           ))
 
       Ok(views.html.todo.list(
@@ -67,6 +67,23 @@ class TodoController @Inject()(
       ))
     }
   }
+
+  // val categoryEntity = categorySeq.collectFirst{
+  //       case category if category.id == Some(todo.category_id) => category
+  //     }
+  //     categoryEntity match {
+  //       case None => {}
+  //       case Some(category) => {
+  //         val res = todoSeq.map(todo => ViewValueTodo(
+  //           id            = todo.id.get,
+  //           title         = todo.title, 
+  //           body          = todo.body, 
+  //           state         = todo.state, 
+  //           category_name = category.v.name,
+  //           color         = category.v.color,
+  //         ))
+  //       }
+  //     }
 
   /**
     * 登録画面の表示用
@@ -118,25 +135,24 @@ class TodoController @Inject()(
     * 編集画面を開く
     */
   def edit(id: Long) = Action async { implicit request: Request[AnyContent] =>
-    val todoFuture     = TodoRepository.getall()
+    val todoFuture     = TodoRepository.get(Todo.Id(id))
     val categoryFuture = TodoCategoryRepository.getall()
     for {
-      todoSeq     <- todoFuture
+      todo        <- todoFuture
       categorySeq <- categoryFuture
    } yield {
-      val todoOpt = todoSeq.find(_.id == Some(Todo.Id(id)))
       val categoryRadioGroup = categorySeq.map(category => (category.id.get.toString, category.name))
-      todoOpt match {
-          case Some(todo: Todo) =>
+      todo match {
+          case Some(todo) =>
             Ok(views.html.todo.edit(
             // データを識別するためのidを渡す
             Todo.Id(id),
             // fillでformに値を詰める
             form.fill(TodoFormData(
-              todo.category_id.toInt,
-              todo.title,
-              todo.body,
-              todo.state.code.toInt
+              todo.v.category_id.toInt,
+              todo.v.title,
+              todo.v.body,
+              todo.v.state.code.toInt
             )),
             categoryRadioGroup,
           ))

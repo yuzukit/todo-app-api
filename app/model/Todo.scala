@@ -7,8 +7,8 @@ case class ViewValueTodo(
     title:         String,
     body:          String,
     state:         Todo.Status,
-    category_name: String,
-    color:         TodoCategory.ColorStatus,
+    category_name: Option[String],
+    color:         Option[TodoCategory.ColorStatus],
 )
 
 case class ViewValueList(
