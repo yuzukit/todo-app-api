@@ -71,12 +71,9 @@ class TodoController @Inject()(
     */
   def register() = Action async { implicit request: Request[AnyContent] =>
     for {
-      categorySeq <- TodoCategoryRepository.getall()
+      categorySeq <- TodoCategoryRepository.getallEntity()
     } yield {
-      val categoryRadioGroup = categorySeq.foldLeft(Seq.empty: Seq[(String, String)])((acc, category) => category.id match{
-        case Some(thisId) => acc ++ Seq((thisId.toString, category.name))
-        case None         => acc
-      })
+      val categoryRadioGroup = categorySeq.map(entity => (entity.id.toString, entity.v.name))
       Ok(views.html.todo.store(form, categoryRadioGroup))
     }
   }
@@ -122,15 +119,12 @@ class TodoController @Inject()(
     */
   def edit(id: Long) = Action async { implicit request: Request[AnyContent] =>
     val todoFuture     = TodoRepository.get(Todo.Id(id))
-    val categoryFuture = TodoCategoryRepository.getall()
+    val categoryFuture = TodoCategoryRepository.getallEntity()
     for {
       todo        <- todoFuture
       categorySeq <- categoryFuture
    } yield {
-      val categoryRadioGroup = categorySeq.foldLeft(Seq.empty: Seq[(String, String)])((acc, category) => category.id match{
-        case Some(thisId) => acc ++ Seq((thisId.toString, category.name))
-        case None         => acc
-      })
+      val categoryRadioGroup = categorySeq.map(entity => (entity.id.toString, entity.v.name))
 
       todo match {
           case Some(todo) =>
@@ -159,12 +153,9 @@ class TodoController @Inject()(
     form.bindFromRequest().fold(
       (formWithErrors: Form[TodoFormData]) => {
         for {
-          categorySeq <- TodoCategoryRepository.getall()
+          categorySeq <- TodoCategoryRepository.getallEntity()
         } yield {
-          val categoryRadioGroup = categorySeq.foldLeft(Seq.empty: Seq[(String, String)])((acc, category) => category.id match{
-            case Some(thisId) => acc ++ Seq((thisId.toString, category.name))
-            case None         => acc
-          })
+          val categoryRadioGroup = categorySeq.map(entity => (entity.id.toString, entity.v.name))
           BadRequest(views.html.todo.edit(Todo.Id(id), formWithErrors, categoryRadioGroup))
         }
       },
