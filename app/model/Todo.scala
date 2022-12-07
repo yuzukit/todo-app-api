@@ -3,7 +3,7 @@ import lib.model.{Todo, TodoCategory}
 import lib.persistence.default.TodoRepository.EntityEmbeddedId
 
 case class ViewValueTodo(
-    id:            Todo.Id,
+    id:            Option[Todo.Id],
     title:         String,
     body:          String,
     state:         Todo.Status,

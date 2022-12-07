@@ -3,7 +3,7 @@ import lib.model.TodoCategory
 import lib.persistence.default.TodoRepository.EntityEmbeddedId
 
 case class ViewValueCategory(
-    id:    TodoCategory.Id,
+    id:    Option[TodoCategory.Id],
     name:  String,
     slug:  String,
     color: TodoCategory.ColorStatus

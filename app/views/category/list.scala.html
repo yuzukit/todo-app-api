@@ -6,7 +6,7 @@
       @for(category <- vv.data){
          <li style="background-color: @category.color">@category.name, @category.slug, @category.color</li>
          <li>
-            <a href="@controllers.category.routes.TodoCategoryController.edit(category.id)">
+            <a href="@controllers.category.routes.TodoCategoryController.edit(category.id.getOrElse(0))">
               <button type="button">編集</button>
             </a>
             @helper.form(action = controllers.category.routes.TodoCategoryController.delete()) {

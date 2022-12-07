@@ -33,14 +33,12 @@ object TodoCategory {
   //~~~~~~~~~~~~~~~~~
   sealed abstract class ColorStatus(val code: Short) extends EnumStatus
   object ColorStatus extends EnumStatus.Of[ColorStatus] {
-    //type Status = values
     case object RED    extends ColorStatus(code = 0)
     case object BLUE   extends ColorStatus(code = 1)
     case object GREEN  extends ColorStatus(code = 2)
     case object YELLOW extends ColorStatus(code = 3)
     case object PURPLE extends ColorStatus(code = 4)
 
-    //lazy val values: IndexedSeq[Status] = findValues
     val statusSeq = ColorStatus.values.map(state => (state.code.toString, state.toString))
   }
 

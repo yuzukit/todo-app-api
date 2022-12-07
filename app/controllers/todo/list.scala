@@ -21,8 +21,6 @@ import ixias.util.EnumStatus
 
 //import scala.concurrent.ExecutionContext.Implicits.global
 
-//case class TodoFormData(category_id: Int, title: String, body: String, state: Int)
-
 @Singleton
 class TodoController @Inject()(
   val controllerComponents: ControllerComponents
@@ -47,7 +45,7 @@ class TodoController @Inject()(
       categorySeq <- categoryFuture
     } yield {
       val res = todoSeq.map(todo => ViewValueTodo(
-          id            = todo.id.get,
+          id            = todo.id,
           title         = todo.title, 
           body          = todo.body, 
           state         = todo.state, 
@@ -68,23 +66,6 @@ class TodoController @Inject()(
     }
   }
 
-  // val categoryEntity = categorySeq.collectFirst{
-  //       case category if category.id == Some(todo.category_id) => category
-  //     }
-  //     categoryEntity match {
-  //       case None => {}
-  //       case Some(category) => {
-  //         val res = todoSeq.map(todo => ViewValueTodo(
-  //           id            = todo.id.get,
-  //           title         = todo.title, 
-  //           body          = todo.body, 
-  //           state         = todo.state, 
-  //           category_name = category.v.name,
-  //           color         = category.v.color,
-  //         ))
-  //       }
-  //     }
-
   /**
     * 登録画面の表示用
     */
@@ -92,7 +73,10 @@ class TodoController @Inject()(
     for {
       categorySeq <- TodoCategoryRepository.getall()
     } yield {
-      val categoryRadioGroup = categorySeq.map(category => (category.id.get.toString, category.name))
+      val categoryRadioGroup = categorySeq.foldLeft(Seq.empty: Seq[(String, String)])((acc, category) => category.id match{
+        case Some(thisId) => acc ++ Seq((thisId.toString, category.name))
+        case None         => acc
+      })
       Ok(views.html.todo.store(form, categoryRadioGroup))
     }
   }
@@ -108,8 +92,10 @@ class TodoController @Inject()(
         for {
           categorySeq <- TodoCategoryRepository.getall()
         } yield {
-          val categoryRadioGroup = categorySeq.map(category => (category.id.get.toString, category.name))
-          //Future.successful(BadRequest(views.html.todo.store(formWithErrors, categoryRadioGroup)))
+          val categoryRadioGroup = categorySeq.foldLeft(Seq.empty: Seq[(String, String)])((acc, category) => category.id match{
+            case Some(thisId) => acc ++ Seq((thisId.toString, category.name))
+            case None         => acc
+          })
           BadRequest(views.html.todo.store(formWithErrors, categoryRadioGroup))
         }
        },
@@ -141,7 +127,11 @@ class TodoController @Inject()(
       todo        <- todoFuture
       categorySeq <- categoryFuture
    } yield {
-      val categoryRadioGroup = categorySeq.map(category => (category.id.get.toString, category.name))
+      val categoryRadioGroup = categorySeq.foldLeft(Seq.empty: Seq[(String, String)])((acc, category) => category.id match{
+        case Some(thisId) => acc ++ Seq((thisId.toString, category.name))
+        case None         => acc
+      })
+
       todo match {
           case Some(todo) =>
             Ok(views.html.todo.edit(
@@ -171,21 +161,27 @@ class TodoController @Inject()(
         for {
           categorySeq <- TodoCategoryRepository.getall()
         } yield {
-          val categoryRadioGroup = categorySeq.map(category => (category.id.get.toString, category.name))
+          val categoryRadioGroup = categorySeq.foldLeft(Seq.empty: Seq[(String, String)])((acc, category) => category.id match{
+            case Some(thisId) => acc ++ Seq((thisId.toString, category.name))
+            case None         => acc
+          })
           BadRequest(views.html.todo.edit(Todo.Id(id), formWithErrors, categoryRadioGroup))
         }
       },
       (data: TodoFormData) => {
         for {
-          oldTodoEntity <- TodoRepository.get(Todo.Id(id))
-          count         <- TodoRepository.update(
-            oldTodoEntity.get.map(_.copy(
-              category_id = TodoCategory.Id(data.category_id),
-              title       = data.title,
-              body        = data.body,
-              state       = Todo.Status(code = data.state.toShort),
-            ))
-          )
+          oldTodoEntityOpt <- TodoRepository.get(Todo.Id(id))
+          count            <- oldTodoEntityOpt match {
+            case Some(oldTodoEntity) => TodoRepository.update(
+                oldTodoEntity.map(_.copy(
+                  category_id = TodoCategory.Id(data.category_id),
+                  title       = data.title,
+                  body        = data.body,
+                  state       = Todo.Status(code = data.state.toShort),
+                ))
+              )
+            case None => Future(NotFound(views.html.error.page404()))
+          }
         } yield {
           Redirect(routes.TodoController.index())
         }

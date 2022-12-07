@@ -42,7 +42,7 @@ class TodoCategoryController @Inject()(
       categorySeq <- TodoCategoryRepository.getall()
     } yield {
       val res = categorySeq.map(category => ViewValueCategory(
-        id    = category.id.get,
+        id    = category.id,
         name  = category.name,
         slug  = category.slug,
         color = category.color,
@@ -99,7 +99,6 @@ class TodoCategoryController @Inject()(
     for {
       category <- TodoCategoryRepository.get(TodoCategory.Id(id))
    } yield {
-      //val categoryOpt = categorySeq.find(_.id == Some(TodoCategory.Id(id)))
       category match {
           case Some(category) =>
             Ok(views.html.category.edit(
@@ -129,13 +128,23 @@ class TodoCategoryController @Inject()(
       (data: CategoryFormData) => {
         for {
           oldEntity <- TodoCategoryRepository.get(TodoCategory.Id(id))
-          count     <- TodoCategoryRepository.update(
-            oldEntity.get.map(_.copy(
-              name  = data.name,
-              slug  = data.slug,
-              color = TodoCategory.ColorStatus(code = data.color.toShort)
-            ))
-          )
+          // count     <- TodoCategoryRepository.update(
+          //   oldEntity.get.map(_.copy(//修正
+          //     name  = data.name,
+          //     slug  = data.slug,
+          //     color = TodoCategory.ColorStatus(code = data.color.toShort)
+          //   ))
+          // )
+          count <- oldEntity match {
+            case Some(entity) => TodoCategoryRepository.update(
+              entity.map(_.copy(
+                name  = data.name,
+                slug  = data.slug,
+                color = TodoCategory.ColorStatus(code = data.color.toShort)
+              ))
+            )
+            case None         => Future(NotFound(views.html.error.page404()))
+          }
         } yield {
           Redirect(routes.TodoCategoryController.index())
         }
