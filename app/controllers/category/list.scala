@@ -128,13 +128,6 @@ class TodoCategoryController @Inject()(
       (data: CategoryFormData) => {
         for {
           oldEntity <- TodoCategoryRepository.get(TodoCategory.Id(id))
-          // count     <- TodoCategoryRepository.update(
-          //   oldEntity.get.map(_.copy(//修正
-          //     name  = data.name,
-          //     slug  = data.slug,
-          //     color = TodoCategory.ColorStatus(code = data.color.toShort)
-          //   ))
-          // )
           count <- oldEntity match {
             case Some(entity) => TodoCategoryRepository.update(
               entity.map(_.copy(
@@ -157,11 +150,20 @@ class TodoCategoryController @Inject()(
    */
   def delete() = Action async { implicit request: Request[AnyContent] =>
     // requestから直接値を取得するサンプル
-    val idOpt = request.body.asFormUrlEncoded.get("id").head
-    for {
-      result <- TodoCategoryRepository.remove(TodoCategory.Id(idOpt.toLong))
-    } yield {
-      Redirect(routes.TodoCategoryController.index())
+
+    val idOpt            = request.body.asFormUrlEncoded.get("id").headOption
+    idOpt match {
+      case None => Future(NotFound(views.html.error.page404()))
+      case Some(id) => {
+        val removeFuture  = TodoCategoryRepository.remove(TodoCategory.Id(id.toLong))
+        for {
+          removeResult <- removeFuture
+          getTodo      <- TodoRepository.getNonCategoryEntity(TodoCategory.Id(id.toLong))
+          removeTodo   <- Future(getTodo.map(todo => TodoRepository.remove(todo.id)))
+        } yield {
+          Redirect(routes.TodoCategoryController.index())
+        }
+      }
     }
   }
 }
