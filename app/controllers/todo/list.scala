@@ -38,21 +38,21 @@ class TodoController @Inject()(
   )
 
   def index() = Action async { implicit req =>
-    val todoFuture     = TodoRepository.getall()
-    val categoryFuture = TodoCategoryRepository.getall()
+    val todoFuture     = TodoRepository.getallEntity()
+    val categoryFuture = TodoCategoryRepository.getallEntity()
     for {
       todoSeq     <- todoFuture
       categorySeq <- categoryFuture
     } yield {
       val res = todoSeq.map(todo => ViewValueTodo(
           id            = todo.id,
-          title         = todo.title, 
-          body          = todo.body, 
-          state         = todo.state, 
+          title         = todo.v.title, 
+          body          = todo.v.body, 
+          state         = todo.v.state, 
           category_name = categorySeq.collectFirst{case category 
-            if category.id == Some(todo.category_id) => category.name},
+            if category.id == todo.v.category_id => category.v.name},
           color         = categorySeq.collectFirst{case category 
-            if category.id == Some(todo.category_id) => category.color}
+            if category.id == todo.v.category_id => category.v.color}
           ))
 
       Ok(views.html.todo.list(
@@ -87,12 +87,9 @@ class TodoController @Inject()(
        // 処理が失敗した場合に呼び出される関数
        (formWithErrors: Form[TodoFormData]) => {
         for {
-          categorySeq <- TodoCategoryRepository.getall()
+          categorySeq <- TodoCategoryRepository.getallEntity()
         } yield {
-          val categoryRadioGroup = categorySeq.foldLeft(Seq.empty: Seq[(String, String)])((acc, category) => category.id match{
-            case Some(thisId) => acc ++ Seq((thisId.toString, category.name))
-            case None         => acc
-          })
+          val categoryRadioGroup = categorySeq.map(entity => (entity.id.toString, entity.v.name))
           BadRequest(views.html.todo.store(formWithErrors, categoryRadioGroup))
         }
        },

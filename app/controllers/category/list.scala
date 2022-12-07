@@ -39,13 +39,13 @@ class TodoCategoryController @Inject()(
 
   def index() = Action async { implicit req =>
     for {
-      categorySeq <- TodoCategoryRepository.getall()
+      categorySeq <- TodoCategoryRepository.getallEntity()
     } yield {
       val res = categorySeq.map(category => ViewValueCategory(
         id    = category.id,
-        name  = category.name,
-        slug  = category.slug,
-        color = category.color,
+        name  = category.v.name,
+        slug  = category.v.slug,
+        color = category.v.color,
       ))
 
       Ok(views.html.category.list(

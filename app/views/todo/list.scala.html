@@ -6,7 +6,7 @@
       @for(todo <- vv.data){
          <li style="background-color: @todo.color">@todo.title, @todo.body, @todo.state, @todo.category_name.getOrElse("UNSELECTED")</li>
          <li>
-            <a href="@controllers.todo.routes.TodoController.edit(todo.id.getOrElse(0))">
+            <a href="@controllers.todo.routes.TodoController.edit(todo.id)">
               <button type="button">編集</button>
             </a>
             @helper.form(action = controllers.todo.routes.TodoController.delete()) {
