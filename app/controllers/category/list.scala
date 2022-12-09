@@ -150,15 +150,15 @@ class TodoCategoryController @Inject()(
    */
   def delete() = Action async { implicit request: Request[AnyContent] =>
     // requestから直接値を取得するサンプル
-
     val idOpt            = request.body.asFormUrlEncoded.get("id").headOption
     idOpt match {
       case None => Future(NotFound(views.html.error.page404()))
       case Some(id) => {
         val removeFuture  = TodoCategoryRepository.remove(TodoCategory.Id(id.toLong))
+        val getTodoFuture = TodoRepository.getEntitiesByCategoryId(TodoCategory.Id(id.toLong))
         for {
           removeResult <- removeFuture
-          getTodo      <- TodoRepository.getNonCategoryEntity(TodoCategory.Id(id.toLong))
+          getTodo      <- getTodoFuture
           removeTodo   <- Future(getTodo.map(todo => TodoRepository.remove(todo.id)))
         } yield {
           Redirect(routes.TodoCategoryController.index())
