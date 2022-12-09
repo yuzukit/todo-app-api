@@ -1,6 +1,6 @@
 @import form.TodoFormData
 @* CSRFトークンの生成ヘルパーで、requestHeaderを必要としているのでこちらも暗黙パラメートして渡しています。 *@
-@(form: Form[TodoFormData])(implicit messagesProvider: MessagesProvider, requestHeader: RequestHeader)
+@(form: Form[TodoFormData], category: Seq[(String, String)])(implicit messagesProvider: MessagesProvider, requestHeader: RequestHeader)
 
 @main("登録画面") {
   <h1>登録画面です</h1>
@@ -8,7 +8,7 @@
     @* CSRFトークンの生成ヘルパーを呼び出している。これでいい感じにトークンが用意されます。 *@
     @helper.CSRF.formField
     @helper.inputRadioGroup(form("category_id"),
-      options = Seq("1" -> "フロントエンド", "2" -> "バックエンド", "3" -> "インフラ"),
+      options = category,
       '_label -> "カテゴリー"
     )
     @helper.inputText(form("title"),

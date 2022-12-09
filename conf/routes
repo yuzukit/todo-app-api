@@ -4,15 +4,21 @@
 # ~~~~
 
 # An example controller showing a sample home page
-GET     /                             controllers.HomeController.index
+GET     /                               controllers.HomeController.index
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
+GET     /assets/*file                   controllers.Assets.versioned(path="/public", file: Asset)
 
-GET     /todo/list                  controllers.todo.TodoController.index
-GET     /todo/store                 controllers.todo.TodoController.register
-POST    /todo/store                 controllers.todo.TodoController.store
+GET     /todo/list                      controllers.todo.TodoController.index
+GET     /todo/store                     controllers.todo.TodoController.register
+POST    /todo/store                     controllers.todo.TodoController.store
+GET     /todo/$id<[0-9]+>/edit          controllers.todo.TodoController.edit(id: Long)
+POST    /todo/$id<[0-9]+>/update        controllers.todo.TodoController.update(id: Long)
+POST    /todo/delete                    controllers.todo.TodoController.delete
 
-GET     /todo/$id<[0-9]+>/edit              controllers.todo.TodoController.edit(id: Long)
-POST    /todo/$id<[0-9]+>/update            controllers.todo.TodoController.update(id: Long)
-POST    /todo/delete               controllers.todo.TodoController.delete
+GET     /category/list                  controllers.category.TodoCategoryController.index
+GET     /category/store                 controllers.category.TodoCategoryController.register
+POST    /category/store                 controllers.category.TodoCategoryController.store
+GET     /category/$id<[0-9]+>/edit      controllers.category.TodoCategoryController.edit(id: Long)
+POST    /category/$id<[0-9]+>/update    controllers.category.TodoCategoryController.update(id: Long)
+POST    /category/delete                controllers.category.TodoCategoryController.delete

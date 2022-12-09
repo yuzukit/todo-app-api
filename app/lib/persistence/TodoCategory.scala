@@ -67,8 +67,8 @@ case class TodoCategoryRepository[P <: JdbcProfile]()(implicit val driver: P)
       } yield old
     }
 
-  def getall(): Future[Seq[TodoCategory]] =
-    RunDBAction(TodoCategoryTable, "slave") { 
+  def getallEntity(): Future[Seq[EntityEmbeddedId]] =
+    RunDBAction(TodoCategoryTable, "slave") {
       _.result
-  }
+    }
 }

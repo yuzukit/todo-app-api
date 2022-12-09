@@ -21,8 +21,6 @@ import ixias.util.EnumStatus
 
 //import scala.concurrent.ExecutionContext.Implicits.global
 
-//case class TodoFormData(category_id: Int, title: String, body: String, state: Int)
-
 @Singleton
 class TodoController @Inject()(
   val controllerComponents: ControllerComponents
@@ -32,7 +30,7 @@ class TodoController @Inject()(
   val form = Form(
     // html formのnameがcontentのものを140文字以下の必須文字列に設定する
     mapping(
-      "category_id"   -> number      (min = 1, max = 3),
+      "category_id"   -> number,
       "title"         -> nonEmptyText(maxLength = 140),
       "body"          -> nonEmptyText(maxLength = 140),
       "state"         -> default     (number, Todo.Status.IS_UNTOUCHED.code.toInt)
@@ -40,19 +38,22 @@ class TodoController @Inject()(
   )
 
   def index() = Action async { implicit req =>
-    val todoFuture     = TodoRepository.getall()
-    val categoryFuture = TodoCategoryRepository.getall()
+    val todoFuture     = TodoRepository.getallEntity()
+    val categoryFuture = TodoCategoryRepository.getallEntity()
     for {
       todoSeq     <- todoFuture
       categorySeq <- categoryFuture
     } yield {
       val res = todoSeq.map(todo => ViewValueTodo(
-          id            = todo.id.get,
-          title         = todo.title, 
-          body          = todo.body, 
-          state         = todo.state, 
+          id            = todo.id,
+          title         = todo.v.title, 
+          body          = todo.v.body, 
+          state         = todo.v.state, 
           category_name = categorySeq.collectFirst{case category 
-            if category.id == Some(todo.category_id) => category.name}.getOrElse("not found")))
+            if category.id == todo.v.category_id => category.v.name},
+          color         = categorySeq.collectFirst{case category 
+            if category.id == todo.v.category_id => category.v.color}
+          ))
 
       Ok(views.html.todo.list(
         ViewValueList(
@@ -68,8 +69,13 @@ class TodoController @Inject()(
   /**
     * 登録画面の表示用
     */
-  def register() = Action { implicit request: Request[AnyContent] =>
-    Ok(views.html.todo.store(form))
+  def register() = Action async { implicit request: Request[AnyContent] =>
+    for {
+      categorySeq <- TodoCategoryRepository.getallEntity()
+    } yield {
+      val categoryRadioGroup = categorySeq.map(entity => (entity.id.toString, entity.v.name))
+      Ok(views.html.todo.store(form, categoryRadioGroup))
+    }
   }
 
   /**
@@ -80,7 +86,12 @@ class TodoController @Inject()(
     form.bindFromRequest().fold(
        // 処理が失敗した場合に呼び出される関数
        (formWithErrors: Form[TodoFormData]) => {
-         Future.successful(BadRequest(views.html.todo.store(formWithErrors)))
+        for {
+          categorySeq <- TodoCategoryRepository.getallEntity()
+        } yield {
+          val categoryRadioGroup = categorySeq.map(entity => (entity.id.toString, entity.v.name))
+          BadRequest(views.html.todo.store(formWithErrors, categoryRadioGroup))
+        }
        },
        // 処理が成功した場合に呼び出される関数
        (todoFormData: TodoFormData) => {
@@ -104,22 +115,27 @@ class TodoController @Inject()(
     * 編集画面を開く
     */
   def edit(id: Long) = Action async { implicit request: Request[AnyContent] =>
+    val todoFuture     = TodoRepository.get(Todo.Id(id))
+    val categoryFuture = TodoCategoryRepository.getallEntity()
     for {
-      todoSeq     <- TodoRepository.getall()
+      todo        <- todoFuture
+      categorySeq <- categoryFuture
    } yield {
-      val todoOpt = todoSeq.find(_.id == Some(Todo.Id(id)))
-      todoOpt match {
-          case Some(todo: Todo) =>
+      val categoryRadioGroup = categorySeq.map(entity => (entity.id.toString, entity.v.name))
+
+      todo match {
+          case Some(todo) =>
             Ok(views.html.todo.edit(
             // データを識別するためのidを渡す
             Todo.Id(id),
             // fillでformに値を詰める
             form.fill(TodoFormData(
-              todo.category_id.toInt,
-              todo.title,
-              todo.body,
-              todo.state.code.toInt
-            ))
+              todo.v.category_id.toInt,
+              todo.v.title,
+              todo.v.body,
+              todo.v.state.code.toInt
+            )),
+            categoryRadioGroup,
           ))
           case None        =>
             NotFound(views.html.error.page404())
@@ -133,19 +149,27 @@ class TodoController @Inject()(
   def update(id: Long) = Action async { implicit request: Request[AnyContent] =>
     form.bindFromRequest().fold(
       (formWithErrors: Form[TodoFormData]) => {
-        Future.successful(BadRequest(views.html.todo.edit(Todo.Id(id), formWithErrors)))
+        for {
+          categorySeq <- TodoCategoryRepository.getallEntity()
+        } yield {
+          val categoryRadioGroup = categorySeq.map(entity => (entity.id.toString, entity.v.name))
+          BadRequest(views.html.todo.edit(Todo.Id(id), formWithErrors, categoryRadioGroup))
+        }
       },
       (data: TodoFormData) => {
         for {
-          oldTodoEntity <- TodoRepository.get(Todo.Id(id))
-          count         <- TodoRepository.update(
-            oldTodoEntity.get.map(_.copy(
-              category_id = TodoCategory.Id(data.category_id),
-              title       = data.title,
-              body        = data.body,
-              state       = Todo.Status(code = data.state.toShort),
-            ))
-          )
+          oldTodoEntityOpt <- TodoRepository.get(Todo.Id(id))
+          count            <- oldTodoEntityOpt match {
+            case Some(oldTodoEntity) => TodoRepository.update(
+                oldTodoEntity.map(_.copy(
+                  category_id = TodoCategory.Id(data.category_id),
+                  title       = data.title,
+                  body        = data.body,
+                  state       = Todo.Status(code = data.state.toShort),
+                ))
+              )
+            case None => Future(NotFound(views.html.error.page404()))
+          }
         } yield {
           Redirect(routes.TodoController.index())
         }

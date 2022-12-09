@@ -1,0 +1,22 @@
+@import lib.model.TodoCategory
+
+@(vv: model.ViewValueCategoryList)(implicit messagesProvider: MessagesProvider, requestHeader: RequestHeader)
+@common.Default(vv){
+   <ul>
+      @for(category <- vv.data){
+         <li style="background-color: @category.color">@category.name, @category.slug, @category.color</li>
+         <li>
+            <a href="@controllers.category.routes.TodoCategoryController.edit(category.id)">
+              <button type="button">編集</button>
+            </a>
+            @helper.form(action = controllers.category.routes.TodoCategoryController.delete()) {
+               @helper.CSRF.formField
+               <input type="hidden" value="@category.id" name="id">
+               <input type="submit" value="削除">
+               <i class="far fa-trash-alt delete"></i>
+             }
+          </li>
+      }
+ </ul>
+ <h3><a href="/category/store">カテゴリーを登録</a></h3>
+}

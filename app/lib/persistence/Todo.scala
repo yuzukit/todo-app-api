@@ -67,8 +67,14 @@ case class TodoRepository[P <: JdbcProfile]()(implicit val driver: P)
       } yield old
     }
 
-  def getall(): Future[Seq[Todo]] =
-    RunDBAction(TodoTable, "slave") { 
+  def getallEntity(): Future[Seq[EntityEmbeddedId]] =
+    RunDBAction(TodoTable, "slave") {
       _.result
-  }
+    }
+
+  def getEntitiesByCategoryId(id: TodoCategory.Id): Future[Seq[EntityEmbeddedId]] =
+    RunDBAction(TodoTable, "slave") { _
+      .filter(_.category_id === id)
+      .result
+    }
 }

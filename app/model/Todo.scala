@@ -7,13 +7,14 @@ case class ViewValueTodo(
     title:         String,
     body:          String,
     state:         Todo.Status,
-    category_name: String,
+    category_name: Option[String],
+    color:         Option[TodoCategory.ColorStatus],
 )
 
 case class ViewValueList(
     title:  String,
     cssSrc: Seq[String],
     jsSrc:  Seq[String],
-    data:   Seq[ViewValueTodo]//(Todo.Id, String, String, Todo.Status, String)]
+    data:   Seq[ViewValueTodo],
 ) extends ViewValueCommon
 
