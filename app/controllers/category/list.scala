@@ -159,7 +159,7 @@ class TodoCategoryController @Inject()(
         for {
           removeResult <- removeFuture
           getTodo      <- getTodoFuture
-          removeTodo   <- Future(getTodo.map(todo => TodoRepository.remove(todo.id)))
+          removeTodo   <- Future.sequence(getTodo.map(todo => TodoRepository.remove(todo.id)))
         } yield {
           Redirect(routes.TodoCategoryController.index())
         }
