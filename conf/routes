@@ -22,3 +22,6 @@ POST    /category/store                 controllers.category.TodoCategoryControl
 GET     /category/$id<[0-9]+>/edit      controllers.category.TodoCategoryController.edit(id: Long)
 POST    /category/$id<[0-9]+>/update    controllers.category.TodoCategoryController.update(id: Long)
 POST    /category/delete                controllers.category.TodoCategoryController.delete
+
+POST    /todo/list                      controllers.todo.TodoController.indexJson
+POST    /category/list                  controllers.category.TodoCategoryController.indexJson

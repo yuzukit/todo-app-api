@@ -20,6 +20,9 @@ import play.api.i18n.I18nSupport
 
 import ixias.util.EnumStatus
 
+import play.api.libs.json._
+import json.writes.JsValueCategoryListItem
+
 //import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
@@ -59,6 +62,19 @@ class TodoCategoryController @Inject()(
     }
   }
 
+  def indexJson() = Action async { implicit req =>
+    for {
+      categorySeq <- TodoCategoryRepository.getallEntity()
+    } yield {
+      val res = categorySeq.map(category => JsValueCategoryListItem.apply(ViewValueCategory(
+        id    = category.id,
+        name  = category.v.name,
+        slug  = category.v.slug,
+        color = category.v.color,
+      )))
+      Ok(Json.toJson(res))
+    }
+  }
   /**
     * 登録画面の表示用
     */

@@ -19,6 +19,9 @@ import play.api.i18n.I18nSupport
 
 import ixias.util.EnumStatus
 
+import play.api.libs.json._
+import json.writes.JsValueTodoListItem
+
 //import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
@@ -63,6 +66,34 @@ class TodoController @Inject()(
           data   = res
         ),
       ))
+    }
+  }
+
+  // def indexJson(): Action[AnyContent] = Action {
+  //   val json: JsValue =
+  //     Json.obj("hello" -> "world", "language" -> "scala")
+
+  //   Ok(json)
+  // }
+
+  def indexJson() = Action async { implicit req =>
+    val todoFuture     = TodoRepository.getallEntity()
+    val categoryFuture = TodoCategoryRepository.getallEntity()
+    for {
+      todoSeq     <- todoFuture
+      categorySeq <- categoryFuture
+    } yield {
+      val res = todoSeq.map(todo => JsValueTodoListItem.apply(ViewValueTodo(
+            id            = todo.id,
+            title         = todo.v.title, 
+            body          = todo.v.body, 
+            state         = todo.v.state, 
+            category_name = categorySeq.collectFirst{case category 
+              if category.id == todo.v.category_id => category.v.name},
+            color         = categorySeq.collectFirst{case category 
+              if category.id == todo.v.category_id => category.v.color}
+          )))
+      Ok(Json.toJson(res))
     }
   }
 
