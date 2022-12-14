@@ -11,6 +11,7 @@ import ixias.util.EnumStatus
 import java.time.LocalDateTime
 
 import play.api.libs.json._
+import json.reads.JsValueCreateTodo
 
 // ユーザーを表すモデル
 //~~~~~~~~~~~~~~~~~~~~

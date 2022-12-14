@@ -22,6 +22,7 @@ import ixias.util.EnumStatus
 
 import play.api.libs.json._
 import json.writes.JsValueCategoryListItem
+import json.reads.JsValueCreateCategory
 
 //import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -106,6 +107,30 @@ class TodoCategoryController @Inject()(
          }
        }
     )
+  }
+
+  // 登録処理 api
+  def save() = Action(parse.json).async { implicit req =>
+    req.body
+      .validate[JsValueCreateCategory]
+      .fold(
+        errors => {
+          //Jsonパースエラーの場合のレスポンス
+          Future.successful(BadRequest("failure"))
+        },
+        categoryData => {
+          //Jsonパース成功時の処理
+          for{
+            res <- TodoCategoryRepository.add(TodoCategory(
+              categoryData.name,
+              categoryData.slug,
+              TodoCategory.ColorStatus(code = categoryData.color.toShort)
+            ))
+          } yield {
+            Ok("success")
+          }
+        }
+      )
   }
 
   /**

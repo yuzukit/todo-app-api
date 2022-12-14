@@ -21,6 +21,7 @@ import ixias.util.EnumStatus
 
 import play.api.libs.json._
 import json.writes.JsValueTodoListItem
+import json.reads.JsValueCreateTodo
 
 //import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -69,13 +70,6 @@ class TodoController @Inject()(
     }
   }
 
-  // def indexJson(): Action[AnyContent] = Action {
-  //   val json: JsValue =
-  //     Json.obj("hello" -> "world", "language" -> "scala")
-
-  //   Ok(json)
-  // }
-
   def indexJson() = Action async { implicit req =>
     val todoFuture     = TodoRepository.getallEntity()
     val categoryFuture = TodoCategoryRepository.getallEntity()
@@ -107,6 +101,31 @@ class TodoController @Inject()(
       val categoryRadioGroup = categorySeq.map(entity => (entity.id.toString, entity.v.name))
       Ok(views.html.todo.store(form, categoryRadioGroup))
     }
+  }
+
+  // 登録処理 api
+  def save() = Action(parse.json).async { implicit req =>
+    req.body
+      .validate[JsValueCreateTodo]
+      .fold(
+        errors => {
+          //Jsonパースエラーの場合のレスポンス
+          Future.successful(BadRequest("error"))
+        },
+        todoData => {
+          //Jsonパース成功時の処理
+          for{
+            res <- TodoRepository.add(Todo(
+              TodoCategory.Id(todoData.category_id),
+              todoData.title,
+              todoData.body,
+              Todo.Status(code = todoData.state.toShort)
+            ))
+          } yield {
+            Ok("success")
+          }
+        }
+      )
   }
 
   /**

@@ -25,3 +25,5 @@ POST    /category/delete                controllers.category.TodoCategoryControl
 
 POST    /todo/list                      controllers.todo.TodoController.indexJson
 POST    /category/list                  controllers.category.TodoCategoryController.indexJson
+POST    /todo/save                      controllers.todo.TodoController.save
+POST    /category/save                  controllers.category.TodoCategoryController.save
