@@ -116,7 +116,7 @@ class TodoCategoryController @Inject()(
       .fold(
         errors => {
           //Jsonパースエラーの場合のレスポンス
-          Future.successful(BadRequest("failure"))
+          Future.successful(BadRequest("store failure"))
         },
         categoryData => {
           //Jsonパース成功時の処理
@@ -127,7 +127,7 @@ class TodoCategoryController @Inject()(
               TodoCategory.ColorStatus(code = categoryData.color.toShort)
             ))
           } yield {
-            Ok("success")
+            Ok("store success")
           }
         }
       )
@@ -185,6 +185,34 @@ class TodoCategoryController @Inject()(
       }
       )
   }
+
+  // 更新API
+  def updateJson(id: Long) = Action(parse.json).async { implicit req =>
+    req.body
+       .validate[JsValueCreateCategory]
+       .fold(
+        errors => {
+          Future.successful(BadRequest("update failure"))
+        },
+        categoryData => {
+          for {
+            oldEntity <- TodoCategoryRepository.get(TodoCategory.Id(id))
+            count <- oldEntity match {
+              case Some(entity) => TodoCategoryRepository.update(
+                entity.map(_.copy(
+                  name  = categoryData.name,
+                  slug  = categoryData.slug,
+                  color = TodoCategory.ColorStatus(code = categoryData.color.toShort)
+                ))
+              )
+              case None         => Future.successful(BadRequest("update failure: id not found"))
+            }
+          } yield {
+            Ok("update success")
+          }
+        }
+       )
+      }
 
   /**
    * 対象のデータを削除する

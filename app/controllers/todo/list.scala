@@ -227,6 +227,35 @@ class TodoController @Inject()(
       )
   }
 
+  // 更新API
+  def updateJson(id: Long) = Action(parse.json).async { implicit req =>
+    req.body
+       .validate[JsValueCreateTodo]
+       .fold(
+        errors => {
+          Future.successful(BadRequest("update failure"))
+        },
+        todoData => {
+          for {
+            oldTodoEntityOpt <- TodoRepository.get(Todo.Id(id))
+            count            <- oldTodoEntityOpt match {
+              case Some(oldTodoEntity) => TodoRepository.update(
+                  oldTodoEntity.map(_.copy(
+                    category_id = TodoCategory.Id(todoData.category_id),
+                    title       = todoData.title,
+                    body        = todoData.body,
+                    state       = Todo.Status(code = todoData.state.toShort),
+                  ))
+                )
+              case None => Future.successful(BadRequest("update failure: id not found"))
+            }
+          } yield {
+            Ok("update success")
+          }
+        }
+       )
+      }
+
   /**
    * 対象のデータを削除する
    */
@@ -239,4 +268,6 @@ class TodoController @Inject()(
       Redirect(routes.TodoController.index())
     }
   }
+
+  //def deleteJson() = Action(parse.json)
 }

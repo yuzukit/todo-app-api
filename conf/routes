@@ -27,3 +27,5 @@ POST    /todo/list                      controllers.todo.TodoController.indexJso
 POST    /category/list                  controllers.category.TodoCategoryController.indexJson
 POST    /todo/save                      controllers.todo.TodoController.save
 POST    /category/save                  controllers.category.TodoCategoryController.save
+POST    /todo/update/$id<[0-9]+>        controllers.todo.TodoController.updateJson(id: Long)   
+POST    /category/update/$id<[0-9]+>    controllers.category.TodoCategoryController.updateJson(id: Long)             

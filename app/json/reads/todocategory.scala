@@ -10,5 +10,4 @@ case class JsValueCreateCategory(
 
 object JsValueCreateCategory {
   implicit val reads: Reads[JsValueCreateCategory] = Json.reads[JsValueCreateCategory]
-
 }
