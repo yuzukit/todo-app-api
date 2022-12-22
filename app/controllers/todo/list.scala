@@ -21,7 +21,7 @@ import ixias.util.EnumStatus
 
 import play.api.libs.json._
 import json.writes.JsValueTodoListItem
-import json.reads.JsValueCreateTodo
+import json.reads.{JsValueCreateTodo}
 
 //import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -122,7 +122,7 @@ class TodoController @Inject()(
               Todo.Status(code = todoData.state.toShort)
             ))
           } yield {
-            Ok("success")
+            Ok(res.toString)
           }
         }
       )
@@ -269,5 +269,11 @@ class TodoController @Inject()(
     }
   }
 
-  //def deleteJson() = Action(parse.json)
+  def deleteJson(id: Long) = Action async{ implicit req =>
+    for {
+      result <- TodoRepository.remove(Todo.Id(id))
+    } yield {
+      Redirect(routes.TodoController.index())
+    }
+  }
 }
