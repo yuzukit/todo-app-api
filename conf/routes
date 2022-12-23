@@ -29,7 +29,7 @@ GET     /category/list/json             controllers.category.TodoCategoryControl
 GET     /todo/list/json/$id<[0-9]+>     controllers.todo.TodoController.editJson(id: Long)
 POST    /todo/save                      controllers.todo.TodoController.save
 POST    /category/save                  controllers.category.TodoCategoryController.save
-POST    /todo/update/$id<[0-9]+>        controllers.todo.TodoController.updateJson(id: Long)   
+PUT     /todo/update/$id<[0-9]+>        controllers.todo.TodoController.updateJson(id: Long)   
 PUT     /category/update/$id<[0-9]+>    controllers.category.TodoCategoryController.updateJson(id: Long)             
 DELETE  /todo/delete/$id<[0-9]+>        controllers.todo.TodoController.deleteJson(id: Long)
 GET     /todo/state                     controllers.todo.TodoController.state

@@ -20,7 +20,7 @@ import play.api.i18n.I18nSupport
 import ixias.util.EnumStatus
 
 import play.api.libs.json._
-import json.writes.{JsValueTodoListItem, JsStateListItem}
+import json.writes.{JsValueTodoListItem, JsStateListItem, JsTodoUpdateItem}
 import json.reads.{JsValueCreateTodo}
 
 //import scala.concurrent.ExecutionContext.Implicits.global
@@ -202,15 +202,11 @@ class TodoController @Inject()(
     } yield {
       todo match {
         case Some(data) => 
-          val res = JsValueTodoListItem.apply(ViewValueTodo(
-            id            = Todo.Id(id),
+          val res = JsTodoUpdateItem.apply(TodoFormData(
+            category_id   = data.v.category_id.toInt,
             title         = data.v.title, 
             body          = data.v.body, 
-            state         = data.v.state, 
-            category_name = categorySeq.collectFirst{case category 
-              if category.id == data.v.category_id => category.v.name},
-            color         = categorySeq.collectFirst{case category 
-              if category.id == data.v.category_id => category.v.color}
+            state         = data.v.state.code
             ))
           Ok(Json.toJson(res))
         case None => BadRequest("id not found")
@@ -275,7 +271,7 @@ class TodoController @Inject()(
               case None => Future.successful(BadRequest("update failure: id not found"))
             }
           } yield {
-            Ok("update success")
+            Ok(Json.toJson("update success"))
           }
         }
        )
