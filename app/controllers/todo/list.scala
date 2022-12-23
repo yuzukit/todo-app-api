@@ -20,7 +20,7 @@ import play.api.i18n.I18nSupport
 import ixias.util.EnumStatus
 
 import play.api.libs.json._
-import json.writes.JsValueTodoListItem
+import json.writes.{JsValueTodoListItem, JsStateListItem}
 import json.reads.{JsValueCreateTodo}
 
 //import scala.concurrent.ExecutionContext.Implicits.global
@@ -193,6 +193,31 @@ class TodoController @Inject()(
    }
   }
 
+  def editJson(id: Long) = Action async { implicit request: Request[AnyContent] =>
+    val todoFuture     = TodoRepository.get(Todo.Id(id))
+    val categoryFuture = TodoCategoryRepository.getallEntity()
+    for {
+      todo        <- todoFuture
+      categorySeq <- categoryFuture
+    } yield {
+      todo match {
+        case Some(data) => 
+          val res = JsValueTodoListItem.apply(ViewValueTodo(
+            id            = Todo.Id(id),
+            title         = data.v.title, 
+            body          = data.v.body, 
+            state         = data.v.state, 
+            category_name = categorySeq.collectFirst{case category 
+              if category.id == data.v.category_id => category.v.name},
+            color         = categorySeq.collectFirst{case category 
+              if category.id == data.v.category_id => category.v.color}
+            ))
+          Ok(Json.toJson(res))
+        case None => BadRequest("id not found")
+      }
+    }
+  }
+
   /**
     * 対象のツイートを更新する
     */
@@ -275,5 +300,13 @@ class TodoController @Inject()(
     } yield {
       Redirect(routes.TodoController.index())
     }
+  }
+
+  def state() = Action async { implicit req =>
+    val res = Todo.Status.values.map(state => JsStateListItem.apply(
+      id = state.code,
+      name = state.toString
+    ))
+    Future(Ok(Json.toJson(res)))
   }
 }
