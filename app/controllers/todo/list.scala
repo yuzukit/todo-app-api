@@ -259,7 +259,7 @@ class TodoController @Inject()(
         todoData => {
           for {
             oldTodoEntityOpt <- TodoRepository.get(Todo.Id(id))
-            count            <- oldTodoEntityOpt match {
+            result           <- oldTodoEntityOpt match {
               case Some(oldTodoEntity) => TodoRepository.update(
                   oldTodoEntity.map(_.copy(
                     category_id = TodoCategory.Id(todoData.category_id),
@@ -268,10 +268,13 @@ class TodoController @Inject()(
                     state       = Todo.Status(code = todoData.state.toShort),
                   ))
                 )
-              case None => Future.successful(BadRequest("update failure: id not found"))
+              case None => Future.successful(None)
             }
           } yield {
-            Ok(Json.toJson("update success"))
+            result match {
+              case None    => BadRequest("update failure: id not found")
+              case Some(_) => Ok(Json.toJson("update success"))
+            }
           }
         }
        )
