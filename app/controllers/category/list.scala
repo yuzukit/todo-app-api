@@ -21,10 +21,8 @@ import play.api.i18n.I18nSupport
 import ixias.util.EnumStatus
 
 import play.api.libs.json._
-import json.writes.JsValueCategoryListItem
+import json.writes.{JsValueCategoryListItem, JsColorListItem, JsCategoryUpdateItem}
 import json.reads.JsValueCreateCategory
-
-//import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
 class TodoCategoryController @Inject()(
@@ -158,6 +156,22 @@ class TodoCategoryController @Inject()(
    }
   }
 
+  def editJson(id: Long) = Action async { implicit request: Request[AnyContent] =>
+    for {
+      category <- TodoCategoryRepository.get(TodoCategory.Id(id))
+    } yield {
+      category match {
+        case Some(category) => 
+          val res = JsCategoryUpdateItem.apply(CategoryFormData(
+            name  = category.v.name,
+            slug  = category.v.slug,
+            color = category.v.color.code
+          ))
+          Ok(Json.toJson(res))
+        case None => BadRequest("id not found")
+      }
+    }
+    }
   /**
     * 対象のツイートを更新する
     */
@@ -197,7 +211,7 @@ class TodoCategoryController @Inject()(
         categoryData => {
           for {
             oldEntity <- TodoCategoryRepository.get(TodoCategory.Id(id))
-            count <- oldEntity match {
+            result <- oldEntity match {
               case Some(entity) => TodoCategoryRepository.update(
                 entity.map(_.copy(
                   name  = categoryData.name,
@@ -205,10 +219,13 @@ class TodoCategoryController @Inject()(
                   color = TodoCategory.ColorStatus(code = categoryData.color.toShort)
                 ))
               )
-              case None         => Future.successful(BadRequest("update failure: id not found"))
+              case None         => Future.successful(None)
             }
           } yield {
-            Ok("update success")
+            result match {
+              case None    => BadRequest("update failure: id not found")
+              case Some(_) => Ok(Json.toJson("update success"))
+            }
           }
         }
        )
@@ -234,5 +251,24 @@ class TodoCategoryController @Inject()(
         }
       }
     }
+  }
+
+  def deleteJson(id: Long) = Action async { implicit req =>
+    for {
+      res <- TodoCategoryRepository.remove(TodoCategory.Id(id))
+    } yield {
+      res match {
+        case Some(s) => Ok(Json.toJson(s.toString))
+        case None    => BadRequest("delete failure")
+      }
+    }
+  }
+
+  def color() = Action async { implicit req =>
+    val res = TodoCategory.ColorStatus.values.map(color => JsColorListItem.apply(
+      id = color.code,
+      name = color.toString
+    ))
+    Future(Ok(Json.toJson(res)))
   }
 }
