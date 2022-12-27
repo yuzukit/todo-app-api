@@ -295,9 +295,12 @@ class TodoController @Inject()(
 
   def deleteJson(id: Long) = Action async{ implicit req =>
     for {
-      result <- TodoRepository.remove(Todo.Id(id))
+      res <- TodoRepository.remove(Todo.Id(id))
     } yield {
-      Redirect(routes.TodoController.index())
+      res match {
+        case Some(s) => Ok(Json.toJson(s.toString))
+        case None    => BadRequest("delete failure")
+      }
     }
   }
 
