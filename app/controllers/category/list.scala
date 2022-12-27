@@ -125,7 +125,7 @@ class TodoCategoryController @Inject()(
               TodoCategory.ColorStatus(code = categoryData.color.toShort)
             ))
           } yield {
-            Ok("store success")
+            Ok(res.toString)
           }
         }
       )
