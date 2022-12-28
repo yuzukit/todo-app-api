@@ -254,10 +254,14 @@ class TodoCategoryController @Inject()(
   }
 
   def deleteJson(id: Long) = Action async { implicit req =>
+    val removeFuture   = TodoCategoryRepository.remove(TodoCategory.Id(id.toLong))
+    val getTodosFuture = TodoRepository.getEntitiesByCategoryId(TodoCategory.Id(id.toLong))
     for {
-      res <- TodoCategoryRepository.remove(TodoCategory.Id(id))
+      removeResult <- removeFuture
+      getTodos     <- getTodosFuture
+      removeTodos  <- Future.sequence(getTodos.map(todo => TodoRepository.remove(todo.id)))
     } yield {
-      res match {
+      removeResult match {
         case Some(s) => Ok(Json.toJson(s.toString))
         case None    => BadRequest("delete failure")
       }
