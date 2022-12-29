@@ -10,6 +10,9 @@ import ixias.util.EnumStatus
 
 import java.time.LocalDateTime
 
+import play.api.libs.json._
+import json.reads.JsValueCreateTodo
+
 // ユーザーを表すモデル
 //~~~~~~~~~~~~~~~~~~~~
 import Todo._
@@ -41,8 +44,10 @@ object Todo {
     case object IS_ONGOING   extends Status(code = 1, name = "進行中") //進行中
     case object IS_FINISHED  extends Status(code = 2, name = "完了") //完了
 
-    //lazy val values: IndexedSeq[Status] = findValues
     val statusSeq = Status.values.map(state => (state.code.toString, state.name))
+    implicit val writes = Writes[Status] {
+      state => Json.toJson(state.toString)
+    }
   }
 
   // INSERT時のIDがAutoincrementのため,IDなしであることを示すオブジェクトに変換

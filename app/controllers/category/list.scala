@@ -20,7 +20,9 @@ import play.api.i18n.I18nSupport
 
 import ixias.util.EnumStatus
 
-//import scala.concurrent.ExecutionContext.Implicits.global
+import play.api.libs.json._
+import json.writes.{JsValueCategoryListItem, JsColorListItem, JsCategoryUpdateItem}
+import json.reads.JsValueCreateCategory
 
 @Singleton
 class TodoCategoryController @Inject()(
@@ -59,6 +61,19 @@ class TodoCategoryController @Inject()(
     }
   }
 
+  def indexJson() = Action async { implicit req =>
+    for {
+      categorySeq <- TodoCategoryRepository.getallEntity()
+    } yield {
+      val res = categorySeq.map(category => JsValueCategoryListItem.apply(ViewValueCategory(
+        id    = category.id,
+        name  = category.v.name,
+        slug  = category.v.slug,
+        color = category.v.color,
+      )))
+      Ok(Json.toJson(res))
+    }
+  }
   /**
     * 登録画面の表示用
     */
@@ -92,6 +107,30 @@ class TodoCategoryController @Inject()(
     )
   }
 
+  // 登録処理 api
+  def save() = Action(parse.json).async { implicit req =>
+    req.body
+      .validate[JsValueCreateCategory]
+      .fold(
+        errors => {
+          //Jsonパースエラーの場合のレスポンス
+          Future.successful(BadRequest("store failure"))
+        },
+        categoryData => {
+          //Jsonパース成功時の処理
+          for{
+            res <- TodoCategoryRepository.add(TodoCategory(
+              categoryData.name,
+              categoryData.slug,
+              TodoCategory.ColorStatus(code = categoryData.color.toShort)
+            ))
+          } yield {
+            Ok(res.toString)
+          }
+        }
+      )
+  }
+
   /**
     * 編集画面を開く
     */
@@ -117,6 +156,22 @@ class TodoCategoryController @Inject()(
    }
   }
 
+  def editJson(id: Long) = Action async { implicit request: Request[AnyContent] =>
+    for {
+      category <- TodoCategoryRepository.get(TodoCategory.Id(id))
+    } yield {
+      category match {
+        case Some(category) => 
+          val res = JsCategoryUpdateItem.apply(CategoryFormData(
+            name  = category.v.name,
+            slug  = category.v.slug,
+            color = category.v.color.code
+          ))
+          Ok(Json.toJson(res))
+        case None => BadRequest("id not found")
+      }
+    }
+    }
   /**
     * 対象のツイートを更新する
     */
@@ -145,6 +200,37 @@ class TodoCategoryController @Inject()(
       )
   }
 
+  // 更新API
+  def updateJson(id: Long) = Action(parse.json).async { implicit req =>
+    req.body
+       .validate[JsValueCreateCategory]
+       .fold(
+        errors => {
+          Future.successful(BadRequest("update failure"))
+        },
+        categoryData => {
+          for {
+            oldEntity <- TodoCategoryRepository.get(TodoCategory.Id(id))
+            result <- oldEntity match {
+              case Some(entity) => TodoCategoryRepository.update(
+                entity.map(_.copy(
+                  name  = categoryData.name,
+                  slug  = categoryData.slug,
+                  color = TodoCategory.ColorStatus(code = categoryData.color.toShort)
+                ))
+              )
+              case None         => Future.successful(None)
+            }
+          } yield {
+            result match {
+              case None    => BadRequest("update failure: id not found")
+              case Some(_) => Ok(Json.toJson("update success"))
+            }
+          }
+        }
+       )
+      }
+
   /**
    * 対象のデータを削除する
    */
@@ -165,5 +251,28 @@ class TodoCategoryController @Inject()(
         }
       }
     }
+  }
+
+  def deleteJson(id: Long) = Action async { implicit req =>
+    val removeFuture   = TodoCategoryRepository.remove(TodoCategory.Id(id.toLong))
+    val getTodosFuture = TodoRepository.getEntitiesByCategoryId(TodoCategory.Id(id.toLong))
+    for {
+      removeResult <- removeFuture
+      getTodos     <- getTodosFuture
+      removeTodos  <- Future.sequence(getTodos.map(todo => TodoRepository.remove(todo.id)))
+    } yield {
+      removeResult match {
+        case Some(s) => Ok(Json.toJson(s.toString))
+        case None    => BadRequest("delete failure")
+      }
+    }
+  }
+
+  def color() = Action async { implicit req =>
+    val res = TodoCategory.ColorStatus.values.map(color => JsColorListItem.apply(
+      id = color.code,
+      name = color.toString
+    ))
+    Future(Ok(Json.toJson(res)))
   }
 }

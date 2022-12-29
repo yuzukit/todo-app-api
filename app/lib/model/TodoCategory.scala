@@ -9,6 +9,7 @@ import ixias.model._
 import ixias.util.EnumStatus
 
 import java.time.LocalDateTime
+import play.api.libs.json._
 
 import TodoCategory._
 case class TodoCategory(
@@ -40,6 +41,9 @@ object TodoCategory {
     case object PURPLE extends ColorStatus(code = 4)
 
     val statusSeq = ColorStatus.values.map(state => (state.code.toString, state.toString))
+    implicit val writes = Writes[ColorStatus] {
+      color => Json.toJson(color.toString)
+    }
   }
 
   // INSERT時のIDがAutoincrementのため,IDなしであることを示すオブジェクトに変換

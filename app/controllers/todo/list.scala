@@ -19,6 +19,10 @@ import play.api.i18n.I18nSupport
 
 import ixias.util.EnumStatus
 
+import play.api.libs.json._
+import json.writes.{JsValueTodoListItem, JsStateListItem, JsTodoUpdateItem}
+import json.reads.{JsValueCreateTodo}
+
 //import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
@@ -66,6 +70,27 @@ class TodoController @Inject()(
     }
   }
 
+  def indexJson() = Action async { implicit req =>
+    val todoFuture     = TodoRepository.getallEntity()
+    val categoryFuture = TodoCategoryRepository.getallEntity()
+    for {
+      todoSeq     <- todoFuture
+      categorySeq <- categoryFuture
+    } yield {
+      val res = todoSeq.map(todo => JsValueTodoListItem.apply(ViewValueTodo(
+            id            = todo.id,
+            title         = todo.v.title, 
+            body          = todo.v.body, 
+            state         = todo.v.state, 
+            category_name = categorySeq.collectFirst{case category 
+              if category.id == todo.v.category_id => category.v.name},
+            color         = categorySeq.collectFirst{case category 
+              if category.id == todo.v.category_id => category.v.color}
+          )))
+      Ok(Json.toJson(res))
+    }
+  }
+
   /**
     * 登録画面の表示用
     */
@@ -76,6 +101,31 @@ class TodoController @Inject()(
       val categoryRadioGroup = categorySeq.map(entity => (entity.id.toString, entity.v.name))
       Ok(views.html.todo.store(form, categoryRadioGroup))
     }
+  }
+
+  // 登録処理 api
+  def save() = Action(parse.json).async { implicit req =>
+    req.body
+      .validate[JsValueCreateTodo]
+      .fold(
+        errors => {
+          //Jsonパースエラーの場合のレスポンス
+          Future.successful(BadRequest("error"))
+        },
+        todoData => {
+          //Jsonパース成功時の処理
+          for{
+            res <- TodoRepository.add(Todo(
+              TodoCategory.Id(todoData.category_id),
+              todoData.title,
+              todoData.body,
+              Todo.Status(code = todoData.state.toShort)
+            ))
+          } yield {
+            Ok(res.toString)
+          }
+        }
+      )
   }
 
   /**
@@ -143,6 +193,27 @@ class TodoController @Inject()(
    }
   }
 
+  def editJson(id: Long) = Action async { implicit request: Request[AnyContent] =>
+    val todoFuture     = TodoRepository.get(Todo.Id(id))
+    val categoryFuture = TodoCategoryRepository.getallEntity()
+    for {
+      todo        <- todoFuture
+      categorySeq <- categoryFuture
+    } yield {
+      todo match {
+        case Some(data) => 
+          val res = JsTodoUpdateItem.apply(TodoFormData(
+            category_id   = data.v.category_id.toInt,
+            title         = data.v.title, 
+            body          = data.v.body, 
+            state         = data.v.state.code
+            ))
+          Ok(Json.toJson(res))
+        case None => BadRequest("id not found")
+      }
+    }
+  }
+
   /**
     * 対象のツイートを更新する
     */
@@ -177,6 +248,38 @@ class TodoController @Inject()(
       )
   }
 
+  // 更新API
+  def updateJson(id: Long) = Action(parse.json).async { implicit req =>
+    req.body
+       .validate[JsValueCreateTodo]
+       .fold(
+        errors => {
+          Future.successful(BadRequest("update failure"))
+        },
+        todoData => {
+          for {
+            oldTodoEntityOpt <- TodoRepository.get(Todo.Id(id))
+            result           <- oldTodoEntityOpt match {
+              case Some(oldTodoEntity) => TodoRepository.update(
+                  oldTodoEntity.map(_.copy(
+                    category_id = TodoCategory.Id(todoData.category_id),
+                    title       = todoData.title,
+                    body        = todoData.body,
+                    state       = Todo.Status(code = todoData.state.toShort),
+                  ))
+                )
+              case None => Future.successful(None)
+            }
+          } yield {
+            result match {
+              case None    => BadRequest("update failure: id not found")
+              case Some(_) => Ok(Json.toJson("update success"))
+            }
+          }
+        }
+       )
+      }
+
   /**
    * 対象のデータを削除する
    */
@@ -188,5 +291,24 @@ class TodoController @Inject()(
     } yield {
       Redirect(routes.TodoController.index())
     }
+  }
+
+  def deleteJson(id: Long) = Action async{ implicit req =>
+    for {
+      res <- TodoRepository.remove(Todo.Id(id))
+    } yield {
+      res match {
+        case Some(s) => Ok(Json.toJson(s.toString))
+        case None    => BadRequest("delete failure")
+      }
+    }
+  }
+
+  def state() = Action async { implicit req =>
+    val res = Todo.Status.values.map(state => JsStateListItem.apply(
+      id = state.code,
+      name = state.toString
+    ))
+    Future(Ok(Json.toJson(res)))
   }
 }
